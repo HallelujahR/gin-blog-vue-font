@@ -34,7 +34,8 @@
       <div id="list" class="list-masonry">
         <div v-for="blog in list" :key="blog.id" class="blog-card" @click="goDetail(blog.id)" style="cursor:pointer; position:relative;">
           <router-link :to="`/blog/${blog.id}`" style="position:absolute;inset:0;z-index:1;" aria-label="open" />
-          <img :src="blog.cover_image" class="blog-card-img" alt="cover" v-if="blog.cover_image"/>
+          <img v-if="blog.cover_image && !blog._imgError" :src="blog.cover_image" class="blog-card-img" alt="cover" @error="blog._imgError = true"/>
+          <div v-if="blog._imgError || !blog.cover_image" class="img-fallback">图片加载失败</div>
           <div class="blog-card-main">
             <div class="blog-card-meta">
               <div>
@@ -44,6 +45,9 @@
             </div>
             <router-link :to="`/blog/${blog.id}`" class="blog-card-title" style="position:relative;z-index:2;">{{ blog.title }}</router-link>
             <div class="blog-card-desc" style="position:relative;z-index:2;">{{ blog.excerpt }}</div>
+            <div class="blog-card-tags" v-if="blog.tags && blog.tags.length" style="position:relative;z-index:2;">
+              <span v-for="t in blog.tags" :key="t.id" class="blog-tag-chip">#{{ t.name }}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -98,7 +102,8 @@ async function fetchPage(p = 1) {
     sort: sortDesc.value ? 'desc' : 'asc',
   };
   const res = await apiPosts.list(params);
-  const rows = res.data.posts || res.data || [];
+  const raw = res.data.posts || res.data || [];
+  const rows = raw.map(r => ({ ...r, _imgError: false }));
   const t = res.data.total;
   total.value = typeof t === 'number' ? t : total.value;
   if (p === 1) list.value = rows; else list.value = list.value.concat(rows);
@@ -151,8 +156,9 @@ function formatDate(dateStr) {
 .filter-panel { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:12px; margin-bottom:12px; }
 .filter-row { display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px; }
 .filter-title { width:52px; color:var(--muted); font-size:13px; }
-.chip { background:var(--chip); border:1px solid var(--chip-border); color:var(--text); padding:6px 10px; border-radius:16px; font-size:12px; cursor:pointer; }
-.chip.active { outline: 2px solid var(--primary-1); }
+.chip { background:var(--chip); border:1px solid var(--chip-border); color:var(--text); padding:6px 10px; border-radius:16px; font-size:12px; cursor:pointer; transition:transform .18s ease, box-shadow .18s ease; }
+.chip:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(79,70,229,.15); }
+.chip.active { background:#e0e7ff; border-color:#c7d2fe; color:#3730a3; font-weight:700; }
 .fade-enter-active,.fade-leave-active { transition: opacity .15s; }
 .fade-enter-from,.fade-leave-to { opacity: 0; }
 .list-masonry { display:flex; flex-direction:column; }
@@ -163,13 +169,16 @@ function formatDate(dateStr) {
 .blog-search-btns { display:flex; gap:9px; margin-left:8px; }
 .icon-btn { background:none; border:1px solid var(--border); color:var(--text); padding:6px 9px; cursor:pointer; border-radius:8px; height:36px; display:flex; align-items:center; }
 .icon-btn:hover { filter: brightness(0.95); }
-.blog-card { background:var(--card); color:var(--text); border:1px solid var(--border); border-radius:14px; display:flex; margin-bottom:22px; box-shadow:0 2px 10px #0b0f191f; overflow:hidden; transition:box-shadow .15s; }
-.blog-card:hover { box-shadow:0 10px 28px #0b15333d; }
+.blog-card { background:var(--card); color:var(--text); border:none; border-radius:14px; display:flex; margin-bottom:22px; box-shadow:0 6px 18px rgba(17,24,39,.06); overflow:hidden; transition:box-shadow .2s, transform .2s; }
+.blog-card:hover { box-shadow:0 16px 32px rgba(17,24,39,.12); transform: translateY(-2px); }
 .blog-card-img { width:310px; height:180px; object-fit:cover; background:#1b2336; flex-shrink:0; }
+.img-fallback { width:310px; height:180px; background:#f1f5f9; color:#94a3b8; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; }
 .blog-card-main { flex:1; padding:28px 22px 22px 28px; display:flex; flex-direction:column; justify-content:center; }
 .blog-card-meta { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
 .blog-card-tag { background:var(--primary-1); border:1px solid var(--primary-2); color:#fff; font-size:12px; padding:3px 10px; border-radius:8px; margin-right:8px; }
 .blog-card-date { font-size:14px; color:var(--muted); }
 .blog-card-title { color:var(--text); font-size:22px; font-weight:700; margin:6px 0 10px 0; display:block; }
 .blog-card-desc { color:#b8c6e2; font-size:15px; line-height:1.72; }
+.blog-card-tags { margin-top:10px; display:flex; flex-wrap:wrap; gap:8px; }
+.blog-tag-chip { background:#f3f6ff; border:1px solid #e4ecff; color:#4f46e5; font-size:12px; padding:4px 10px; border-radius:999px; }
 </style>

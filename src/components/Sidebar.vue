@@ -11,21 +11,38 @@
     <section class="box">
       <h3>分类</h3>
       <div class="chips">
-        <router-link v-for="c in categories" :key="c.id" class="chip" :to="{name:'Home', query:{ category: c.slug }}">{{ c.name }}</router-link>
+        <a
+          v-for="c in categories"
+          :key="c.id"
+          class="chip"
+          :class="{ active: route.query.category === c.slug }"
+          href="#"
+          @click.prevent="toggleCategory(c.slug)"
+        >{{ c.name }}</a>
       </div>
     </section>
     <section class="box">
       <h3>标签</h3>
       <div class="chips">
-        <router-link v-for="t in tags" :key="t.id" class="chip" :to="{name:'Home', query:{ tag: t.slug }}">#{{ t.name }}</router-link>
+        <a
+          v-for="t in tags"
+          :key="t.id"
+          class="chip"
+          :class="{ active: route.query.tag === t.slug }"
+          href="#"
+          @click.prevent="toggleTag(t.slug)"
+        >#{{ t.name }}</a>
       </div>
     </section>
   </aside>
 </template>
 <script setup>
 import { ref, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { apiHot, apiMeta } from '../api';
 
+const route = useRoute();
+const router = useRouter();
 const hotPosts = ref([]);
 const categories = ref([]);
 const tags = ref([]);
@@ -54,14 +71,31 @@ onMounted(async () => {
     tags.value = (tagRes.data && (tagRes.data.tags || tagRes.data)) || [];
   } catch (e) {}
 });
+
+function toggleCategory(slug) {
+  const current = route.query.category;
+  const next = current === slug ? undefined : slug;
+  router.replace({ name: 'Home', query: { ...route.query, category: next } });
+}
+
+function toggleTag(slug) {
+  const current = route.query.tag;
+  const next = current === slug ? undefined : slug;
+  router.replace({ name: 'Home', query: { ...route.query, tag: next } });
+}
 </script>
 <style scoped>
 .sidebar { position: sticky; top: 24px; display: flex; flex-direction: column; gap: 16px; }
-.box { background:#0f1420; border:1px solid #2a3242; border-radius:12px; padding:14px 16px; }
-h3 { margin: 0 0 10px; font-size:16px; color:#eaf1ff; }
+.box { background: var(--card); border: none; border-radius: 12px; padding:14px 16px; box-shadow: 0 6px 18px rgba(17,24,39,.04); transition: box-shadow .2s ease; }
+.box:hover { box-shadow: 0 10px 24px rgba(17,24,39,.08); }
+h3 { margin: 0 0 10px; font-size:16px; color: var(--text); }
 .list { list-style:none; padding:0; margin:0; }
-.list-item { padding:6px 0; border-bottom:1px dashed #223; }
+.list-item { padding:8px 0; border-bottom: 1px dashed #eef2f7; }
+.list-item a { color: var(--text); opacity: .85; transition: color .2s ease, opacity .2s ease; }
+.list-item a:hover { color: #4f46e5; opacity: 1; }
 .list-item:last-child { border: none; }
 .chips { display:flex; flex-wrap:wrap; gap:8px; }
-.chip { background:#16223c; border:1px solid #2a3242; color:#d9e5ff; padding:5px 10px; border-radius:16px; font-size:12px; }
+.chip { background: var(--chip); border:1px solid var(--chip-border); color: var(--text); padding:6px 12px; border-radius:16px; font-size:12px; transition: transform .18s ease, box-shadow .18s ease, background .18s ease, color .18s ease; }
+.chip:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(79,70,229,.15); }
+.chip.active { background: #e0e7ff; border-color: #c7d2fe; color: #3730a3; font-weight: 700; }
 </style>

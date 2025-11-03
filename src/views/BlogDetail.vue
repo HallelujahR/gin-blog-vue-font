@@ -50,12 +50,21 @@ const fetchBlog = async () => {
   const res = await apiPosts.detail(id);
   blog.value = res.data.post || {};
 };
+function buildTree(flat) {
+  const byId = new Map();
+  flat.forEach(c => byId.set(c.id, { ...c, children: [] }));
+  const roots = [];
+  byId.forEach(c => {
+    if (c.parent_id && byId.has(c.parent_id)) byId.get(c.parent_id).children.push(c); else roots.push(c);
+  });
+  return roots;
+}
+
 const fetchComments = async () => {
   const id = route.params.id;
   const commentRes = await apiComments.listByPost(id);
-  comments.value = (commentRes.data.comments || []).map(c => ({
-    id: c.id, content: c.content, author_name: c.author_name, created_at: c.created_at, parent_id: c.parent_id,
-  }));
+  const flat = (commentRes.data.comments || []).map(c => ({ id: c.id, content: c.content, author_name: c.author_name, created_at: c.created_at, parent_id: c.parent_id }));
+  comments.value = buildTree(flat);
 };
 const fetchLikeCount = async () => {
   const id = route.params.id;
@@ -87,15 +96,16 @@ async function toggleLike() {
 }
 </script>
 <style scoped>
-.detail-card { background:#0f1420; color:#fff; border:1px solid #2a3242; border-radius:14px; box-shadow:0 6px 28px #0b0f191a; padding:32px; margin-bottom:26px; }
-.detail-card h1 { font-size:2.2rem; color:#eaf1ff; margin:12px 0 12px 2px; }
+.detail-card { background: var(--card); color: var(--text); border: none; border-radius:14px; box-shadow:0 6px 18px rgba(17,24,39,.06); padding:32px; margin-bottom:26px; }
+.detail-card h1 { font-size:2.2rem; color: var(--text); margin:12px 0 12px 2px; }
 .detail-cover { width:100%; max-height:330px; object-fit:cover; margin-bottom:18px; border-radius:11px; }
 .detail-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
-.blog-card-tag { background:#233159; border:1px solid #344269; color:#d9e5ff; font-size:13px; padding:3px 12px; border-radius:8px; margin-right:10px; font-weight:600; }
-.blog-card-date { font-size:15px; color:#9da9be; }
-.detail-markdown { color:#dce7ff; font-size:17px; line-height:1.95; background:#10182a; border-radius:10px; padding:22px 24px; }
-.detail-comment-box { margin-top: 22px; background:#10182a; border-radius:12px; padding:22px; color:#e9eefd; border:1px solid #2a3242; }
-.comment-input { width:100%; margin:8px 0; padding:8px 10px; border-radius:8px; border:1px solid #2a3242; background:#0b101a; color:#e7edf9; }
+.blog-card-tag { background: var(--chip); border:1px solid var(--chip-border); color: var(--text); font-size:13px; padding:3px 12px; border-radius:8px; margin-right:10px; font-weight:600; }
+.blog-card-date { font-size:15px; color:#8192a8; }
+.detail-markdown { color: #334155; font-size:17px; line-height:1.95; background:#ffffff; border-radius:10px; padding:22px 24px; border:1px solid #eef2f7; }
+.detail-comment-box { margin-top: 22px; background:#ffffff; border-radius:12px; padding:22px; color: var(--text); border:1px solid #eef2f7; }
+.comment-input { width:100%; margin:8px 0; padding:10px 12px; border-radius:10px; border:1px solid #e6eef6; background:#fff; color:#1e293b; }
 .like-row { display:flex; justify-content:flex-end; margin: 6px 0 14px; }
-.like-btn { background:#172648; border:1px solid #2a3242; }
+.like-btn { background: linear-gradient(135deg, #667eea 0%, #93a5ff 100%); border:none; color:#fff; border-radius:10px; padding:10px 16px; box-shadow:0 4px 12px rgba(102,126,234,.25); }
+.detail-comment-box h2 { color:#1e293b; }
 </style>
