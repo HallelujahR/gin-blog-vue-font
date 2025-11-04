@@ -199,16 +199,21 @@ const handleLogout = async () => {
 }
 
 .logout-btn-header {
-  padding: 10px 20px;
-  background: #ffffff;
-  color: #64748b;
-  border: 1px solid #e2e8f0;
+  background: linear-gradient(95deg, var(--primary-1) 0%, var(--primary-2) 100%);
+  color: #fff;
+  border: none;
   border-radius: 8px;
-  cursor: pointer;
+  padding: 8px 16px;
   font-size: 14px;
-  font-weight: 500;
-  transition: all 0.3s ease;
+  cursor: pointer;
+  transition: background .18s;
+  margin-top: 8px;
 }
+
+.logout-btn-header:hover {
+  filter: brightness(0.92);
+}
+
 
 .logout-btn-header:hover {
   background: #fee2e2;

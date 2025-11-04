@@ -9,10 +9,17 @@
         <div class="blog-card-date">{{ formatDate(blog.published_at || blog.created_at) }}</div>
       </div>
       <h1>{{ blog.title }}</h1>
-      <div class="like-row">
-        <button @click="toggleLike" class="like-btn">👍 点赞 {{ likeCount }}</button>
-      </div>
       <div v-html="blog.content" class="detail-markdown" />
+      <div class="detail-stats">
+        <button @click="toggleLike" class="stat-btn">
+          <span class="stat-icon">👍</span>
+          <span class="stat-text">点赞 {{ likeCount }}</span>
+        </button>
+        <span class="stat-btn stat-view">
+          <span class="stat-icon">👁️</span>
+          <span class="stat-text">浏览 {{ viewCount }}</span>
+        </span>
+      </div>
     </div>
     <div class="detail-comment-box">
       <h2>评论</h2>
@@ -37,6 +44,7 @@ const newComment = ref('');
 const authorName = ref('访客');
 const authorEmail = ref('guest@example.com');
 const likeCount = ref(0);
+const viewCount = ref(0);
 const fakeUserId = 1; // 可替换为真实登录用户ID
 
 const formatDate = (dateStr)=>{
@@ -48,7 +56,51 @@ const formatDate = (dateStr)=>{
 const fetchBlog = async () => {
   const id = route.params.id;
   const res = await apiPosts.detail(id);
-  blog.value = res.data.post || {};
+  const post = res.data.post || {};
+  
+  // 处理分类和标签：优先使用 category_names/tag_names，如果没有则使用 categories/tags
+  let categories = [];
+  if (post.category_names && Array.isArray(post.category_names)) {
+    // 后端返回了 category_names 数组，需要组合成对象数组
+    const ids = (post.category_ids && Array.isArray(post.category_ids)) ? post.category_ids : [];
+    for (let i = 0; i < post.category_names.length; i++) {
+      if (post.category_names[i]) {
+        categories.push({
+          id: ids[i] || (i + 1),
+          name: post.category_names[i]
+        });
+      }
+    }
+  } else if (post.categories && Array.isArray(post.categories)) {
+    // 如果已经是对象数组，直接使用
+    categories = post.categories;
+  }
+  
+  let tags = [];
+  if (post.tag_names && Array.isArray(post.tag_names)) {
+    // 后端返回了 tag_names 数组，需要组合成对象数组
+    const ids = (post.tag_ids && Array.isArray(post.tag_ids)) ? post.tag_ids : [];
+    for (let i = 0; i < post.tag_names.length; i++) {
+      if (post.tag_names[i]) {
+        tags.push({
+          id: ids[i] || (i + 1),
+          name: post.tag_names[i]
+        });
+      }
+    }
+  } else if (post.tags && Array.isArray(post.tags)) {
+    // 如果已经是对象数组，直接使用
+    tags = post.tags;
+  }
+  
+  blog.value = {
+    ...post,
+    categories: categories,
+    tags: tags
+  };
+  
+  // 获取浏览量
+  viewCount.value = blog.value.view_count || 0;
 };
 function buildTree(flat) {
   const byId = new Map();
@@ -102,10 +154,15 @@ async function toggleLike() {
 .detail-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
 .blog-card-tag { background: var(--chip); border:1px solid var(--chip-border); color: var(--text); font-size:13px; padding:3px 12px; border-radius:8px; margin-right:10px; font-weight:600; }
 .blog-card-date { font-size:15px; color:#8192a8; }
-.detail-markdown { color: #334155; font-size:17px; line-height:1.95; background:#ffffff; border-radius:10px; padding:22px 24px; border:1px solid #eef2f7; }
+.detail-markdown { color: #334155; font-size:17px; line-height:1.95; background:#ffffff; border-radius:10px; padding:22px 24px; border:1px solid #eef2f7; margin-bottom: 20px; }
+.detail-stats { display: flex; align-items: center; gap: 16px; margin-top: 24px; padding-top: 20px; border-top: 1px solid #eef2f7; }
+.stat-btn { display: inline-flex; align-items: center; gap: 6px; padding: 0; border: none; background: transparent; color: #64748b; font-size: 13px; cursor: pointer; transition: all 0.2s ease; font-weight: 500; line-height: 1.5; }
+.stat-btn:hover { color: #475569; }
+.stat-btn.stat-view { cursor: default; }
+.stat-btn.stat-view:hover { color: #64748b; }
+.stat-icon { font-size: 14px; line-height: 1; }
+.stat-text { font-size: 13px; line-height: 1.5; }
 .detail-comment-box { margin-top: 22px; background:#ffffff; border-radius:12px; padding:22px; color: var(--text); border:1px solid #eef2f7; }
 .comment-input { width:100%; margin:8px 0; padding:10px 12px; border-radius:10px; border:1px solid #e6eef6; background:#fff; color:#1e293b; }
-.like-row { display:flex; justify-content:flex-end; margin: 6px 0 14px; }
-.like-btn { background: linear-gradient(135deg, #667eea 0%, #93a5ff 100%); border:none; color:#fff; border-radius:10px; padding:10px 16px; box-shadow:0 4px 12px rgba(102,126,234,.25); }
 .detail-comment-box h2 { color:#1e293b; }
 </style>

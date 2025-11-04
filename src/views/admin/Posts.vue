@@ -17,6 +17,7 @@
               <th>ID</th>
               <th>标题</th>
               <th>分类</th>
+              <th>标签</th>
               <th>浏览量</th>
               <th>发布时间</th>
               <th>操作</th>
@@ -29,7 +30,10 @@
                 <router-link :to="`/blog/${post.id}`" target="_blank">{{ post.title }}</router-link>
               </td>
               <td>
-                <span v-for="cat in (post.categories || [])" :key="cat.id" class="tag">{{ cat.name }}</span>
+                <span v-for="cat in (post.category_names || [])" :key="cat.id" class="tag">{{ cat }}</span>
+              </td>
+              <td>
+                <span v-for="tag in (post.tag_names || [])" :key="tag.id" class="tag">{{ tag }}</span>
               </td>
               <td>{{ post.view_count || 0 }}</td>
               <td>{{ formatDate(post.published_at || post.created_at) }}</td>

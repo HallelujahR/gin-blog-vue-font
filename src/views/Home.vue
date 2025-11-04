@@ -38,16 +38,14 @@
           <div v-if="blog._imgError || !blog.cover_image" class="img-fallback">图片加载失败</div>
           <div class="blog-card-main">
             <div class="blog-card-meta">
-              <div>
-                <span v-for="cat in (blog.categories || [])" :key="cat.id" class="blog-card-tag">{{ cat.name }}</span>
+              <div class="blog-card-meta-left">
+                <span v-for="cat in (blog.categories || [])" :key="cat.id" class="blog-meta-chip">{{ cat.name }}</span>
+                <span v-for="t in (blog.tags || [])" :key="t.id" class="blog-meta-chip">#{{ t.name }}</span>
               </div>
               <span class="blog-card-date">{{ formatDate(blog.published_at || blog.created_at) }}</span>
             </div>
             <router-link :to="`/blog/${blog.id}`" class="blog-card-title" style="position:relative;z-index:2;">{{ blog.title }}</router-link>
             <div class="blog-card-desc" style="position:relative;z-index:2;">{{ blog.excerpt }}</div>
-            <div class="blog-card-tags" v-if="blog.tags && blog.tags.length" style="position:relative;z-index:2;">
-              <span v-for="t in blog.tags" :key="t.id" class="blog-tag-chip">#{{ t.name }}</span>
-            </div>
           </div>
         </div>
       </div>
@@ -103,7 +101,43 @@ async function fetchPage(p = 1) {
   };
   const res = await apiPosts.list(params);
   const raw = res.data.posts || res.data || [];
-  const rows = raw.map(r => ({ ...r, _imgError: false }));
+  // 将后端返回的 category_names/category_ids 和 tag_names/tag_ids 转换为对象数组
+  const rows = raw.map(r => {
+    // 处理分类：将 category_names 和 category_ids 组合成对象数组
+    const categories = [];
+    if (r.category_names && Array.isArray(r.category_names)) {
+      const ids = (r.category_ids && Array.isArray(r.category_ids)) ? r.category_ids : [];
+      for (let i = 0; i < r.category_names.length; i++) {
+        if (r.category_names[i]) { // 确保名称不为空
+          categories.push({
+            id: ids[i] || (i + 1),
+            name: r.category_names[i]
+          });
+        }
+      }
+    }
+    
+    // 处理标签：将 tag_names 和 tag_ids 组合成对象数组
+    const tags = [];
+    if (r.tag_names && Array.isArray(r.tag_names)) {
+      const ids = (r.tag_ids && Array.isArray(r.tag_ids)) ? r.tag_ids : [];
+      for (let i = 0; i < r.tag_names.length; i++) {
+        if (r.tag_names[i]) { // 确保名称不为空
+          tags.push({
+            id: ids[i] || (i + 1),
+            name: r.tag_names[i]
+          });
+        }
+      }
+    }
+    
+    return {
+      ...r,
+      categories: categories,
+      tags: tags,
+      _imgError: false
+    };
+  });
   const t = res.data.total;
   total.value = typeof t === 'number' ? t : total.value;
   if (p === 1) list.value = rows; else list.value = list.value.concat(rows);
@@ -175,10 +209,9 @@ function formatDate(dateStr) {
 .img-fallback { width:310px; height:180px; background:#f1f5f9; color:#94a3b8; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; }
 .blog-card-main { flex:1; padding:28px 22px 22px 28px; display:flex; flex-direction:column; justify-content:center; }
 .blog-card-meta { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
-.blog-card-tag { background:var(--primary-1); border:1px solid var(--primary-2); color:#fff; font-size:12px; padding:3px 10px; border-radius:8px; margin-right:8px; }
+.blog-card-meta-left { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
+.blog-meta-chip { background:#f3f6ff; border:1px solid #e4ecff; color:#4f46e5; font-size:12px; padding:4px 10px; border-radius:999px; font-weight:500; }
 .blog-card-date { font-size:14px; color:var(--muted); }
 .blog-card-title { color:var(--text); font-size:22px; font-weight:700; margin:6px 0 10px 0; display:block; }
 .blog-card-desc { color:#b8c6e2; font-size:15px; line-height:1.72; }
-.blog-card-tags { margin-top:10px; display:flex; flex-wrap:wrap; gap:8px; }
-.blog-tag-chip { background:#f3f6ff; border:1px solid #e4ecff; color:#4f46e5; font-size:12px; padding:4px 10px; border-radius:999px; }
 </style>
