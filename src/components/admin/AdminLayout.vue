@@ -25,6 +25,10 @@
           <span class="nav-icon">👥</span>
           <span>用户管理</span>
         </router-link>
+        <router-link to="/admin/pages" class="nav-item">
+          <span class="nav-icon">📄</span>
+          <span>页面管理</span>
+        </router-link>
       </nav>
     </aside>
     <main class="admin-main">

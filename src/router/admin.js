@@ -58,6 +58,25 @@ export const adminRoutes = [
         component: () => import('../views/admin/Users.vue'),
         meta: { requiresAuth: true, isAdmin: true, title: '用户管理' }
       },
+      {
+        path: 'pages',
+        name: 'AdminPages',
+        component: () => import('../views/admin/Pages.vue'),
+        meta: { requiresAuth: true, isAdmin: true, title: '页面管理' }
+      },
+      {
+        path: 'pages/create',
+        name: 'AdminPageCreate',
+        component: () => import('../views/admin/PageEdit.vue'),
+        meta: { requiresAuth: true, isAdmin: true, title: '创建页面' }
+      },
+      {
+        path: 'pages/edit/:id',
+        name: 'AdminPageEdit',
+        component: () => import('../views/admin/PageEdit.vue'),
+        props: true,
+        meta: { requiresAuth: true, isAdmin: true, title: '编辑页面' }
+      },
     ]
   },
 ];

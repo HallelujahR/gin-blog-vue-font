@@ -123,6 +123,15 @@ export const apiAdminUsers = {
   updateRole: (id, role) => adminHttp.put(`/admin/users/${id}/role`, { role }),
 };
 
+// 页面管理API
+export const apiAdminPages = {
+  list: () => adminHttp.get('/admin/pages'),
+  detail: (id) => adminHttp.get(`/admin/pages/${id}`),
+  create: (payload) => adminHttp.post('/admin/pages', payload),
+  update: (id, payload) => adminHttp.put(`/admin/pages/${id}`, payload),
+  delete: (id) => adminHttp.delete(`/admin/pages/${id}`),
+};
+
 // 图片上传API
 export const apiAdminUpload = {
   // 上传单张图片，返回图片URL

@@ -9,6 +9,24 @@
         <div class="blog-card-date">{{ formatDate(blog.published_at || blog.created_at) }}</div>
       </div>
       <h1>{{ blog.title }}</h1>
+      <div class="detail-meta-tags">
+        <router-link 
+          v-for="cat in (blog.categories || [])" 
+          :key="cat.id" 
+          :to="{ name: 'Home', query: { category: cat.slug || cat.id } }"
+          class="detail-meta-chip detail-category-chip"
+        >
+          {{ cat.name }}
+        </router-link>
+        <router-link 
+          v-for="tag in (blog.tags || [])" 
+          :key="tag.id" 
+          :to="{ name: 'Home', query: { tag: tag.slug || tag.id } }"
+          class="detail-meta-chip detail-tag-chip"
+        >
+          #{{ tag.name }}
+        </router-link>
+      </div>
       <div v-html="blog.content" class="detail-markdown" />
       <div class="detail-stats">
         <button @click="toggleLike" class="stat-btn">
@@ -34,7 +52,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import { apiPosts, apiComments, apiLike } from '../api';
+import { apiPosts, apiComments, apiLike, apiMeta } from '../api';
 import Comment from '../components/Comment.vue';
 
 const route = useRoute();
@@ -46,6 +64,10 @@ const authorEmail = ref('guest@example.com');
 const likeCount = ref(0);
 const viewCount = ref(0);
 const fakeUserId = 1; // 可替换为真实登录用户ID
+
+// 存储所有分类和标签，用于匹配slug
+const allCategories = ref([]);
+const allTags = ref([]);
 
 const formatDate = (dateStr)=>{
   if (!dateStr) return '';
@@ -61,36 +83,56 @@ const fetchBlog = async () => {
   // 处理分类和标签：优先使用 category_names/tag_names，如果没有则使用 categories/tags
   let categories = [];
   if (post.category_names && Array.isArray(post.category_names)) {
-    // 后端返回了 category_names 数组，需要组合成对象数组
+    // 后端返回了 category_names 数组，需要组合成对象数组并匹配slug
     const ids = (post.category_ids && Array.isArray(post.category_ids)) ? post.category_ids : [];
     for (let i = 0; i < post.category_names.length; i++) {
       if (post.category_names[i]) {
+        const catId = ids[i] || (i + 1);
+        // 从所有分类中查找对应的slug
+        const matchedCat = allCategories.value.find(c => c.id === catId || c.name === post.category_names[i]);
         categories.push({
-          id: ids[i] || (i + 1),
-          name: post.category_names[i]
+          id: catId,
+          name: post.category_names[i],
+          slug: matchedCat?.slug || ''
         });
       }
     }
   } else if (post.categories && Array.isArray(post.categories)) {
-    // 如果已经是对象数组，直接使用
-    categories = post.categories;
+    // 如果已经是对象数组，直接使用（确保有slug）
+    categories = post.categories.map(cat => {
+      if (!cat.slug) {
+        const matchedCat = allCategories.value.find(c => c.id === cat.id || c.name === cat.name);
+        return { ...cat, slug: matchedCat?.slug || '' };
+      }
+      return cat;
+    });
   }
   
   let tags = [];
   if (post.tag_names && Array.isArray(post.tag_names)) {
-    // 后端返回了 tag_names 数组，需要组合成对象数组
+    // 后端返回了 tag_names 数组，需要组合成对象数组并匹配slug
     const ids = (post.tag_ids && Array.isArray(post.tag_ids)) ? post.tag_ids : [];
     for (let i = 0; i < post.tag_names.length; i++) {
       if (post.tag_names[i]) {
+        const tagId = ids[i] || (i + 1);
+        // 从所有标签中查找对应的slug
+        const matchedTag = allTags.value.find(t => t.id === tagId || t.name === post.tag_names[i]);
         tags.push({
-          id: ids[i] || (i + 1),
-          name: post.tag_names[i]
+          id: tagId,
+          name: post.tag_names[i],
+          slug: matchedTag?.slug || ''
         });
       }
     }
   } else if (post.tags && Array.isArray(post.tags)) {
-    // 如果已经是对象数组，直接使用
-    tags = post.tags;
+    // 如果已经是对象数组，直接使用（确保有slug）
+    tags = post.tags.map(tag => {
+      if (!tag.slug) {
+        const matchedTag = allTags.value.find(t => t.id === tag.id || t.name === tag.name);
+        return { ...tag, slug: matchedTag?.slug || '' };
+      }
+      return tag;
+    });
   }
   
   blog.value = {
@@ -101,6 +143,20 @@ const fetchBlog = async () => {
   
   // 获取浏览量
   viewCount.value = blog.value.view_count || 0;
+};
+
+// 获取所有分类和标签（用于匹配slug）
+const fetchAllCategoriesAndTags = async () => {
+  try {
+    const [catRes, tagRes] = await Promise.all([
+      apiMeta.categories(),
+      apiMeta.tags()
+    ]);
+    allCategories.value = catRes.data?.categories || catRes.data || [];
+    allTags.value = tagRes.data?.tags || tagRes.data || [];
+  } catch (error) {
+    console.error('获取分类或标签失败:', error);
+  }
 };
 function buildTree(flat) {
   const byId = new Map();
@@ -125,6 +181,8 @@ const fetchLikeCount = async () => {
 };
 
 onMounted(async () => {
+  // 先获取所有分类和标签，用于匹配slug
+  await fetchAllCategoriesAndTags();
   await fetchBlog();
   await Promise.all([fetchComments(), fetchLikeCount()]);
 });
@@ -154,6 +212,9 @@ async function toggleLike() {
 .detail-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
 .blog-card-tag { background: var(--chip); border:1px solid var(--chip-border); color: var(--text); font-size:13px; padding:3px 12px; border-radius:8px; margin-right:10px; font-weight:600; }
 .blog-card-date { font-size:15px; color:#8192a8; }
+.detail-meta-tags { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 16px 0 24px 2px; }
+.detail-meta-chip { display: inline-block; background: #f3f6ff; border: 1px solid #e4ecff; color: #4f46e5; font-size: 12px; padding: 4px 10px; border-radius: 999px; font-weight: 500; text-decoration: none; transition: all 0.2s ease; }
+.detail-meta-chip:hover { background: #e0e7ff; border-color: #c7d2fe; color: #3730a3; transform: translateY(-1px); }
 .detail-markdown { color: #334155; font-size:17px; line-height:1.95; background:#ffffff; border-radius:10px; padding:22px 24px; border:1px solid #eef2f7; margin-bottom: 20px; }
 .detail-stats { display: flex; align-items: center; gap: 16px; margin-top: 24px; padding-top: 20px; border-top: 1px solid #eef2f7; }
 .stat-btn { display: inline-flex; align-items: center; gap: 6px; padding: 0; border: none; background: transparent; color: #64748b; font-size: 13px; cursor: pointer; transition: all 0.2s ease; font-weight: 500; line-height: 1.5; }
