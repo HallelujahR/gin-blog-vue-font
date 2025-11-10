@@ -3,7 +3,7 @@ ARG NGINX_IMAGE=nginx:1.25-alpine
 FROM ${NODE_IMAGE} AS build
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci --no-audit --silent
+RUN npm install --no-audit --silent --legacy-peer-deps
 COPY . .
 RUN npm run build
 
