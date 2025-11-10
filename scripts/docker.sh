@@ -22,7 +22,8 @@ case "$1" in
     ;;
   run)
     docker rm -f "$CONTAINER_NAME" >/dev/null 2>&1 || true
-    docker run -d --name "$CONTAINER_NAME" -p 8080:80 "$IMAGE_NAME"
+    HOST_PORT="${FRONTEND_PORT:-8080}"
+    docker run -d --name "$CONTAINER_NAME" -p "$HOST_PORT:80" "$IMAGE_NAME"
     ;;
   stop)
     docker rm -f "$CONTAINER_NAME" >/dev/null 2>&1 || true
