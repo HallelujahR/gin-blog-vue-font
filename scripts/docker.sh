@@ -56,6 +56,54 @@ case "$1" in
       exit 1
     fi
     ;;
+  run-host)
+    step "Run frontend container (proxy to host.docker.internal)"
+    docker rm -f "$CONTAINER_NAME" >/dev/null 2>&1 || true
+    HOST_PORT="${FRONTEND_PORT:-80}"
+    API_PORT="${API_PORT:-8080}"
+    TMP_DIR="$SCRIPT_DIR/.tmp"
+    mkdir -p "$TMP_DIR"
+    TMP_CONF="$TMP_DIR/default.conf"
+    cat > "$TMP_CONF" <<EOF
+server {
+    listen 80;
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    location / {
+        try_files \$uri \$uri/ /index.html;
+    }
+
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)\$ {
+        expires 7d;
+        add_header Cache-Control "public";
+    }
+
+    location /api/ {
+        proxy_pass http://host.docker.internal:${API_PORT};
+    }
+}
+EOF
+    print_kv "Container name" "$CONTAINER_NAME"
+    print_kv "Image name" "$IMAGE_NAME"
+    print_kv "Host port" "$HOST_PORT"
+    print_kv "API (host)" "host.docker.internal:${API_PORT}"
+    docker run -d --name "$CONTAINER_NAME" \
+      -p "$HOST_PORT:80" \
+      -v "$TMP_CONF":/etc/nginx/conf.d/default.conf:ro \
+      "$IMAGE_NAME"
+    sleep 0.5
+    STATUS="$(docker inspect -f '{{.State.Status}}' "$CONTAINER_NAME" 2>/dev/null || echo 'unknown')"
+    print_kv "Container status" "$STATUS"
+    if [ "$STATUS" = "running" ]; then
+      printf "✔ Container started: http://localhost:%s\n" "$HOST_PORT"
+    else
+      printf "✘ Container is not running. Last 50 log lines:\n"
+      docker logs --tail 50 "$CONTAINER_NAME" || true
+      exit 1
+    fi
+    ;;
   stop)
     step "Stop and remove frontend container"
     print_kv "Container name" "$CONTAINER_NAME"
