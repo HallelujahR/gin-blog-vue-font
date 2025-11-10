@@ -2,7 +2,7 @@ import axios from 'axios';
 import { adminAuth } from '../utils/auth.js';
 
 const http = axios.create({
-  baseURL: 'http://localhost:8080/api',
+  baseURL: '/api',
   timeout: 7000,
 });
 
