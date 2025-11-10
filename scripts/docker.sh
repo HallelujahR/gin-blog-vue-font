@@ -1,7 +1,9 @@
 #!/bin/sh
 set -e
 
-ROOT="/Users/wangruiwen/Desktop/blog/front"
+# Resolve project root based on this script's location (scripts/..)
+SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)"
+ROOT="$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd -P)"
 IMAGE_NAME="blog-frontend"
 CONTAINER_NAME="blog-frontend"
 # Use locally cached base images from your registry
