@@ -17,8 +17,19 @@
       </div>
 
       <div class="form-group">
-        <label>内容 *</label>
-        <div ref="editorContainer" class="quill-editor"></div>
+        <label>内容（Markdown） *</label>
+        <v-md-editor
+          v-model="form.content"
+          :height="editorHeight"
+          :left-toolbar="leftToolbar"
+          :right-toolbar="rightToolbar"
+          :config="editorConfig"
+          :default-show-preview="true"
+          autofocus
+          @save="handleSubmit"
+          @fullscreen-change="onEditorFullscreenChange"
+        />
+        <div v-if="uploadingImage" class="md-uploading-tip">图片上传中，请稍候...</div>
       </div>
 
       <div class="form-row">
@@ -89,12 +100,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, onBeforeUnmount, nextTick } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { apiAdminPosts, apiAdminCategories, apiAdminTags, apiAdminUpload } from '../../api/admin.js';
+import { apiAdminPosts, apiAdminUpload } from '../../api/admin.js';
 import { apiMeta } from '../../api/index.js';
-import Quill from 'quill';
-import 'quill/dist/quill.snow.css';
 
 const route = useRoute();
 const router = useRouter();
@@ -107,8 +116,13 @@ const tags = ref([]);
 const previewUrl = ref('');
 const imageFile = ref(null); // 存储选中的文件对象
 const fileInput = ref(null);
-const editorContainer = ref(null);
-let quillEditor = null;
+
+const isEditorFullscreen = ref(false);
+const uploadingImage = ref(false);
+
+const leftToolbar = 'undo redo clear | h bold italic strikethrough quote | ul ol todo-list table | link image code | save preview toc sync-scroll fullscreen';
+const rightToolbar = 'preview toc sync-scroll fullscreen';
+const editorHeight = computed(() => (isEditorFullscreen.value ? '100%' : '560px'));
 
 const form = ref({
   title: '',
@@ -119,6 +133,52 @@ const form = ref({
   tag_ids: [],
   status: 'draft',
 });
+
+const editorConfig = {
+  uploadImg: {
+    async handler(files) {
+      const validFiles = Array.from(files).filter((file) => {
+        if (!file.type.startsWith('image/')) {
+          alert('仅支持上传图片文件');
+          return false;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+          alert(`图片 ${file.name} 大小超过 5MB，已跳过`);
+          return false;
+        }
+        return true;
+      });
+
+      if (!validFiles.length) return [];
+
+      uploadingImage.value = true;
+      try {
+        const urls = [];
+        for (const file of validFiles) {
+          const res = await apiAdminUpload.uploadImage(file);
+          const url = res.data?.url ||
+                      res.data?.image_url ||
+                      res.data?.data?.url ||
+                      res.data?.data?.image_url ||
+                      res.data?.path ||
+                      '';
+          if (url) {
+            urls.push(url);
+          } else {
+            alert(`图片 ${file.name} 上传成功但未返回 URL`);
+          }
+        }
+        return urls;
+      } catch (error) {
+        console.error('上传图片失败', error);
+        alert('上传图片失败，请稍后重试');
+        return [];
+      } finally {
+        uploadingImage.value = false;
+      }
+    },
+  },
+};
 
 // 处理图片选择（仅预览，不上传）
 const handleImageSelect = (e) => {
@@ -166,12 +226,6 @@ const clearImage = () => {
   }
 };
 
-const getCategoryName = (id) => {
-  const category = categories.value.find(cat => cat.id === id);
-  return category ? category.name : '未知分类';
-};
-
-
 const fetchCategories = async () => {
   try {
     const response = await apiMeta.categories();
@@ -196,41 +250,6 @@ const fetchTags = async () => {
   }
 };
 
-// 初始化富文本编辑器
-const initEditor = () => {
-  if (!editorContainer.value || quillEditor) return;
-  
-  quillEditor = new Quill(editorContainer.value, {
-    theme: 'snow',
-    modules: {
-      toolbar: [
-        [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-        ['bold', 'italic', 'underline', 'strike'],
-        [{ 'color': [] }, { 'background': [] }],
-        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-        [{ 'indent': '-1'}, { 'indent': '+1' }],
-        [{ 'align': [] }],
-        ['link', 'image', 'video'],
-        ['blockquote', 'code-block'],
-        ['clean']
-      ]
-    },
-    placeholder: '请输入文章内容...',
-  });
-  
-  // 监听编辑器内容变化，同步到form.content
-  quillEditor.on('text-change', () => {
-    form.value.content = quillEditor.root.innerHTML;
-  });
-};
-
-// 设置编辑器内容
-const setEditorContent = (html) => {
-  if (quillEditor && html) {
-    quillEditor.root.innerHTML = html;
-    form.value.content = html;
-  }
-};
 
 const fetchPost = async () => {
   if (!isEdit.value) return;
@@ -273,12 +292,6 @@ const fetchPost = async () => {
       status: post.status || post.published ? 'published' : 'draft',
     };
     
-    // 设置编辑器内容
-    await nextTick();
-    if (form.value.content) {
-      setEditorContent(form.value.content);
-    }
-    
     // 设置预览图（已有图片URL，不是文件）
     if (post.cover_image) {
       previewUrl.value = post.cover_image;
@@ -293,11 +306,12 @@ const fetchPost = async () => {
   }
 };
 
+const onEditorFullscreenChange = (val) => {
+  isEditorFullscreen.value = val;
+};
+
 const handleSubmit = async () => {
-  // 确保从编辑器获取最新内容
-  if (quillEditor) {
-    form.value.content = quillEditor.root.innerHTML;
-  }
+  // Markdown 模式下直接使用 form.content
   
   if (!form.value.title || !form.value.content || form.value.content.trim() === '') {
     alert('请填写标题和内容');
@@ -384,20 +398,9 @@ const handleSubmit = async () => {
 
 onMounted(async () => {
   await Promise.all([fetchCategories(), fetchTags()]);
-  
-  // 初始化编辑器
-  await nextTick();
-  initEditor();
-  
+
   if (isEdit.value) {
     await fetchPost();
-  }
-});
-
-// 组件销毁时清理编辑器
-onBeforeUnmount(() => {
-  if (quillEditor) {
-    quillEditor = null;
   }
 });
 </script>
@@ -494,79 +497,51 @@ onBeforeUnmount(() => {
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
-/* 富文本编辑器样式 */
-.quill-editor {
-  min-height: 400px;
+.md-uploading-tip {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #64748b;
+}
+
+:deep(.v-md-editor) {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
   background: #ffffff;
 }
-
-.quill-editor :deep(.ql-container) {
-  min-height: 400px;
-  font-size: 15px;
-  color: #1e293b;
-  border-bottom-left-radius: 10px;
-  border-bottom-right-radius: 10px;
-  border: 1px solid #e2e8f0;
-  border-top: none;
+:deep(.v-md-editor__toolbar) {
+  background: #ffffff;
+  border-bottom: 1px solid #eef2f7;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
 }
-
-.quill-editor :deep(.ql-toolbar) {
-  border: 1px solid #e2e8f0;
-  border-top-left-radius: 10px;
-  border-top-right-radius: 10px;
-  background: #f8fafc;
-  padding: 12px;
+:deep(.v-md-editor__toolbar .v-md-editor__toolbar-item) {
+  color: #111827;
 }
-
-.quill-editor :deep(.ql-toolbar .ql-stroke) {
-  stroke: #475569;
+:deep(.v-md-editor__toolbar .v-md-editor__toolbar-item:hover) {
+  background: #eef2ff;
+  color: #4338ca;
 }
-
-.quill-editor :deep(.ql-toolbar .ql-fill) {
-  fill: #475569;
+:deep(.v-md-editor__editor-wrapper),
+:deep(.v-md-editor__main),
+:deep(.v-md-editor__preview) {
+  background: #ffffff;
 }
-
-.quill-editor :deep(.ql-toolbar button:hover),
-.quill-editor :deep(.ql-toolbar button.ql-active) {
-  background: #e0e7ff;
+:deep(.v-md-editor__editor-wrapper pre) {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+:deep(.v-md-editor-preview code),
+:deep(.v-md-editor__preview code) {
+  background: #f3f4f6;
+  padding: 2px 6px;
   border-radius: 4px;
 }
-
-.quill-editor :deep(.ql-toolbar .ql-picker-label:hover) {
-  color: #667eea;
-}
-
-.quill-editor :deep(.ql-editor) {
-  padding: 18px;
-  line-height: 1.6;
-}
-
-.quill-editor :deep(.ql-editor.ql-blank::before) {
-  color: #94a3b8;
-  font-style: normal;
-}
-
-.quill-editor :deep(.ql-editor img) {
-  max-width: 100%;
-  height: auto;
-  border-radius: 8px;
-  margin: 12px 0;
-}
-
-.quill-editor :deep(.ql-editor pre.ql-syntax) {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 12px;
-  color: #1e293b;
-}
-
-.quill-editor :deep(.ql-editor blockquote) {
-  border-left: 4px solid #667eea;
-  padding-left: 16px;
-  margin: 16px 0;
-  color: #64748b;
-  font-style: italic;
+:deep(.v-md-editor-preview pre),
+:deep(.v-md-editor__preview pre) {
+  background: #0d1117;
+  color: #c9d1d9;
+  padding: 16px;
+  border-radius: 10px;
 }
 
 .form-row {

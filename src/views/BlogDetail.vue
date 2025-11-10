@@ -27,7 +27,7 @@
           #{{ tag.name }}
         </router-link>
       </div>
-      <div v-html="blog.content" class="detail-markdown" />
+      <v-md-preview :text="blog.content || ''" class="detail-markdown" />
       <div class="detail-stats">
         <button @click="toggleLike" class="stat-btn">
           <span class="stat-icon">👍</span>
