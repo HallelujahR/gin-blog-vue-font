@@ -56,6 +56,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { apiAdminUsers } from '../../api/admin.js';
+import { showToast } from '../../utils/toast';
 
 const users = ref([]);
 const search = ref('');
@@ -68,7 +69,7 @@ const fetchUsers = async () => {
     users.value = response.data.users || response.data || [];
   } catch (error) {
     console.error('获取用户列表失败:', error);
-    alert('获取用户列表失败');
+    showToast('获取用户列表失败', 'error', 3000);
   } finally {
     loading.value = false;
   }
@@ -77,10 +78,10 @@ const fetchUsers = async () => {
 const handleRoleChange = async (id, role) => {
   try {
     await apiAdminUsers.updateRole(id, role);
-    alert('角色更新成功');
+    showToast('角色更新成功', 'success');
   } catch (error) {
     console.error('更新角色失败:', error);
-    alert('更新角色失败');
+    showToast('更新角色失败', 'error', 3000);
     await fetchUsers();
   }
 };
@@ -88,24 +89,26 @@ const handleRoleChange = async (id, role) => {
 const handleStatusChange = async (id, status) => {
   try {
     await apiAdminUsers.updateStatus(id, status);
-    alert('状态更新成功');
+    showToast('状态更新成功', 'success');
   } catch (error) {
     console.error('更新状态失败:', error);
-    alert('更新状态失败');
+    showToast('更新状态失败', 'error', 3000);
     await fetchUsers();
   }
 };
 
+import { confirm as askConfirm } from '../../utils/confirm';
 const handleDelete = async (id) => {
-  if (!confirm('确定要删除这个用户吗？')) return;
+  const ok = await askConfirm('确定要删除这个用户吗？', { title: '删除用户确认', okText: '删除', cancelText: '取消', type: 'warn' });
+  if (!ok) return;
 
   try {
     await apiAdminUsers.delete(id);
     await fetchUsers();
-    alert('删除成功');
+    showToast('删除成功', 'success');
   } catch (error) {
     console.error('删除失败:', error);
-    alert('删除失败');
+    showToast('删除失败', 'error', 3000);
   }
 };
 

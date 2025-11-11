@@ -11,6 +11,7 @@
     "@kangc/v-md-editor": "2.3.18-beta.0",
     "axios": "^1.6.2",
     "quill": "^2.0.3",
+    "turndown": "^7.1.2",
     "prismjs": "^1.29.0",
     "vue": "^3.4.15",
     "vue-router": "^4.2.5"

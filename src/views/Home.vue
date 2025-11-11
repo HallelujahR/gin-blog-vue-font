@@ -33,7 +33,6 @@
 
       <div id="list" class="list-masonry">
         <div v-for="blog in list" :key="blog.id" class="blog-card" @click="goDetail(blog.id)" style="cursor:pointer; position:relative;">
-          <router-link :to="`/blog/${blog.id}`" style="position:absolute;inset:0;z-index:1;" aria-label="open" />
           <img v-if="blog.cover_image && !blog._imgError" :src="blog.cover_image" class="blog-card-img" alt="cover" @error="blog._imgError = true"/>
           <div class="blog-card-main">
             <div class="blog-card-meta">

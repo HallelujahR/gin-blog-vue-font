@@ -93,6 +93,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { apiAdminPosts } from '../../api/admin.js';
+import { showToast } from '../../utils/toast';
 
 const posts = ref([]);
 const search = ref('');
@@ -146,7 +147,7 @@ const fetchPosts = async (page = 1) => {
     currentPage.value = page;
   } catch (error) {
     console.error('获取文章列表失败:', error);
-    alert('获取文章列表失败');
+    showToast('获取文章列表失败', 'error', 3000);
   } finally {
     loading.value = false;
   }
@@ -162,16 +163,18 @@ const handleSearch = () => {
   fetchPosts(1);
 };
 
+import { confirm as askConfirm } from '../../utils/confirm';
 const handleDelete = async (id) => {
-  if (!confirm('确定要删除这篇文章吗？')) return;
+  const ok = await askConfirm('确定要删除这篇文章吗？', { title: '删除文章确认', type: 'warn', okText: '删除', cancelText: '取消' });
+  if (!ok) return;
   
   try {
     await apiAdminPosts.delete(id);
     await fetchPosts();
-    alert('删除成功');
+    showToast('删除成功', 'success');
   } catch (error) {
     console.error('删除失败:', error);
-    alert('删除失败');
+    showToast('删除失败', 'error', 3000);
   }
 };
 

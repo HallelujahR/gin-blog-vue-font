@@ -27,7 +27,12 @@
           #{{ tag.name }}
         </router-link>
       </div>
-      <v-md-preview :text="blog.content || ''" class="detail-markdown" />
+      <template v-if="isHtmlContent">
+        <div class="detail-markdown" v-html="blog.content"></div>
+      </template>
+      <template v-else>
+        <v-md-preview :text="blog.content || ''" class="detail-markdown" />
+      </template>
       <div class="detail-stats">
         <button @click="toggleLike" class="stat-btn">
           <span class="stat-icon">👍</span>
@@ -50,13 +55,20 @@
   </div>
 </template>
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { apiPosts, apiComments, apiLike, apiMeta } from '../api';
 import Comment from '../components/Comment.vue';
 
 const route = useRoute();
 const blog = ref({});
+const isHtmlContent = computed(() => {
+  const c = blog.value?.content || '';
+  if (!c) return false;
+  const looksHtml = /<\/?[a-z][\s\S]*>/i.test(c);
+  const hasMdHeading = /^#{1,6}\s/m.test(c);
+  return looksHtml && !hasMdHeading;
+});
 const comments = ref([]);
 const newComment = ref('');
 const authorName = ref('访客');
@@ -185,6 +197,14 @@ onMounted(async () => {
   await fetchAllCategoriesAndTags();
   await fetchBlog();
   await Promise.all([fetchComments(), fetchLikeCount()]);
+});
+
+// 当路由 id 变化时，重新加载详情（同组件复用场景）
+watch(() => route.params.id, async () => {
+  await fetchAllCategoriesAndTags();
+  await fetchBlog();
+  await Promise.all([fetchComments(), fetchLikeCount()]);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
 const submitComment = async () => {

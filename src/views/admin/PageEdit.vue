@@ -53,6 +53,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { apiAdminPages } from '../../api/admin.js';
 import Quill from 'quill';
 import 'quill/dist/quill.snow.css';
+import { showToast } from '../../utils/toast';
 
 const route = useRoute();
 const router = useRouter();
@@ -137,7 +138,7 @@ const fetchPage = async () => {
     setEditorContent(form.value.content);
   } catch (error) {
     console.error('获取页面失败:', error);
-    alert('获取页面失败: ' + (error.response?.data?.error || error.message || '未知错误'));
+    showToast('获取页面失败: ' + (error.response?.data?.error || error.message || '未知错误'), 'error', 3200);
     router.push({ name: 'AdminPages' });
   } finally {
     loading.value = false;
@@ -147,7 +148,7 @@ const fetchPage = async () => {
 // 提交表单
 const handleSubmit = async () => {
   if (!form.value.title || !form.value.slug) {
-    alert('请填写标题和Slug');
+    showToast('请填写标题和Slug', 'warn');
     return;
   }
 
@@ -157,7 +158,7 @@ const handleSubmit = async () => {
   }
 
   if (!form.value.content || form.value.content.trim() === '' || form.value.content === '<p><br></p>') {
-    alert('请输入页面内容');
+    showToast('请输入页面内容', 'warn');
     return;
   }
 
@@ -174,10 +175,10 @@ const handleSubmit = async () => {
 
     if (isEdit.value) {
       await apiAdminPages.update(route.params.id, payload);
-      alert('更新成功');
+      showToast('更新成功', 'success');
     } else {
       await apiAdminPages.create(payload);
-      alert('创建成功');
+      showToast('创建成功', 'success');
     }
     
     router.push({ name: 'AdminPages' });
@@ -187,7 +188,7 @@ const handleSubmit = async () => {
                     error.response?.data?.message || 
                     error.message || 
                     '未知错误';
-    alert('保存失败: ' + errorMsg);
+    showToast('保存失败: ' + errorMsg, 'error', 3200);
   } finally {
     loading.value = false;
   }

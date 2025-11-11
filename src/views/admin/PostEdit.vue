@@ -24,7 +24,7 @@
           :left-toolbar="leftToolbar"
           :right-toolbar="rightToolbar"
           :config="editorConfig"
-          :default-show-preview="true"
+          :mode="editorMode"
           autofocus
           @save="handleSubmit"
           @fullscreen-change="onEditorFullscreenChange"
@@ -100,10 +100,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { apiAdminPosts, apiAdminUpload } from '../../api/admin.js';
 import { apiMeta } from '../../api/index.js';
+import { showToast } from '../../utils/toast';
 
 const route = useRoute();
 const router = useRouter();
@@ -118,9 +119,10 @@ const imageFile = ref(null); // 存储选中的文件对象
 const fileInput = ref(null);
 
 const isEditorFullscreen = ref(false);
+const editorMode = ref('editable-preview'); // auto switch if fenced code block unclosed
 const uploadingImage = ref(false);
 
-const leftToolbar = 'undo redo clear | h bold italic strikethrough quote | ul ol todo-list table | link image code | save preview toc sync-scroll fullscreen';
+const leftToolbar = 'undo redo clear | h bold italic strikethrough quote | ul ol todo-list table | link image code | save preview toc sync-scroll fullscreen | html2md';
 const rightToolbar = 'preview toc sync-scroll fullscreen';
 const editorHeight = computed(() => (isEditorFullscreen.value ? '100%' : '560px'));
 
@@ -178,6 +180,34 @@ const editorConfig = {
       }
     },
   },
+  toolbar: {
+    html2md: {
+      title: 'HTML 转 Markdown',
+      icon: 'v-md-icon-tip',
+      action(editor) {
+        try {
+          // 延迟拿到当前文本
+          setTimeout(async () => {
+            const Turndown = (await import('turndown')).default;
+            const td = new Turndown({
+              headingStyle: 'atx',
+              codeBlockStyle: 'fenced'
+            });
+            const html = form.value.content || '';
+            if (!html || !/<[a-z][\s\S]*>/i.test(html)) {
+              alert('当前内容不是 HTML，或为空');
+              return;
+            }
+            const mdText = td.turndown(html);
+            form.value.content = mdText;
+          });
+        } catch (e) {
+          console.error('HTML 转换失败', e);
+          alert('HTML 转 Markdown 失败，请稍后重试');
+        }
+      }
+    }
+  }
 };
 
 // 处理图片选择（仅预览，不上传）
@@ -186,14 +216,14 @@ const handleImageSelect = (e) => {
   if (file) {
     // 验证文件类型
     if (!file.type.startsWith('image/')) {
-      alert('请选择图片文件');
+      showToast('请选择图片文件', 'warn');
       e.target.value = '';
       return;
     }
     
     // 验证文件大小（限制为5MB）
     if (file.size > 5 * 1024 * 1024) {
-      alert('图片大小不能超过5MB');
+      showToast('图片大小不能超过5MB', 'warn');
       e.target.value = '';
       return;
     }
@@ -299,7 +329,7 @@ const fetchPost = async () => {
     }
   } catch (error) {
     console.error('获取文章失败:', error);
-    alert('获取文章失败: ' + (error.response?.data?.error || error.message || '未知错误'));
+    showToast('获取文章失败: ' + (error.response?.data?.error || error.message || '未知错误'), 'error', 3000);
     router.push({ name: 'AdminPosts' });
   } finally {
     loading.value = false;
@@ -310,15 +340,18 @@ const onEditorFullscreenChange = (val) => {
   isEditorFullscreen.value = val;
 };
 
+let saving = false;
 const handleSubmit = async () => {
+  if (saving || loading.value) return;
   // Markdown 模式下直接使用 form.content
   
   if (!form.value.title || !form.value.content || form.value.content.trim() === '') {
-    alert('请填写标题和内容');
+    showToast('请填写标题和内容', 'warn');
     return;
   }
 
   loading.value = true;
+  saving = true;
 
   try {
     // 构建提交数据
@@ -359,7 +392,7 @@ const handleSubmit = async () => {
           form.value.cover_image = returnedUrl;
         }
       }
-      alert('更新成功');
+      showToast('更新成功', 'success');
     } else {
       const response = await apiAdminPosts.create(
         payload, 
@@ -380,19 +413,20 @@ const handleSubmit = async () => {
           form.value.cover_image = returnedUrl;
         }
       }
-      alert('创建成功');
+      showToast('创建成功', 'success');
     }
     
-    router.push({ name: 'AdminPosts' });
+    await router.push({ name: 'AdminPosts' });
   } catch (error) {
     console.error('保存失败:', error);
     const errorMsg = error.response?.data?.error || 
                     error.response?.data?.message || 
                     error.message || 
                     '未知错误';
-    alert('保存失败: ' + errorMsg);
+    showToast('保存失败: ' + errorMsg, 'error', 3200);
   } finally {
     loading.value = false;
+    saving = false;
   }
 };
 
@@ -402,6 +436,37 @@ onMounted(async () => {
   if (isEdit.value) {
     await fetchPost();
   }
+  await nextTick();
+  // Enable Tab indentation inside editor textarea
+  const root = document.querySelector('.v-md-editor');
+  if (root) {
+    root.addEventListener('keydown', (e) => {
+      if (e.key === 'Tab') {
+        const target = e.target;
+        if (target && target.tagName === 'TEXTAREA') {
+          e.preventDefault();
+          const start = target.selectionStart || 0;
+          const end = target.selectionEnd || 0;
+          const val = target.value;
+          const indent = '  '; // two spaces
+          target.value = val.slice(0, start) + indent + val.slice(end);
+          target.selectionStart = target.selectionEnd = start + indent.length;
+          // 同步到 v-model
+          form.value.content = target.value;
+        }
+      }
+    }, true);
+  }
+});
+
+// When user is typing an unclosed fenced code block like ```js ...,
+// disable live preview to avoid rendering glitches that may freeze editing
+watch(() => form.value.content, (val = '') => {
+  // count occurrences of ```
+  const fenceMatches = val.match(/(^|\n)```/g);
+  const count = fenceMatches ? fenceMatches.length : 0;
+  const hasUnclosedFence = count % 2 === 1;
+  editorMode.value = hasUnclosedFence ? 'edit' : 'editable-preview';
 });
 </script>
 

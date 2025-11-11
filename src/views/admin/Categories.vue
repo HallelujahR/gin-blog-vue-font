@@ -70,6 +70,7 @@
 import { ref, onMounted } from 'vue';
 import { apiAdminCategories } from '../../api/admin.js';
 import { apiMeta } from '../../api/index.js';
+import { showToast } from '../../utils/toast';
 
 const categories = ref([]);
 const loading = ref(false);
@@ -85,7 +86,7 @@ const fetchCategories = async () => {
     categories.value = response.data.categories || response.data || [];
   } catch (error) {
     console.error('获取分类失败:', error);
-    alert('获取分类失败');
+    showToast('获取分类失败', 'error', 3000);
   } finally {
     loading.value = false;
   }
@@ -93,7 +94,7 @@ const fetchCategories = async () => {
 
 const handleCreate = async () => {
   if (!newCategory.value.name || !newCategory.value.slug) {
-    alert('请填写名称和标识');
+    showToast('请填写名称和标识', 'warn');
     return;
   }
 
@@ -105,10 +106,10 @@ const handleCreate = async () => {
     await fetchCategories();
     newCategory.value = { name: '', slug: '' };
     showCreateForm.value = false;
-    alert('创建成功');
+    showToast('创建成功', 'success');
   } catch (error) {
     console.error('创建失败:', error);
-    alert('创建失败');
+    showToast('创建失败', 'error', 3000);
   }
 };
 
@@ -129,7 +130,7 @@ const cancelEdit = () => {
 
 const handleUpdate = async (id) => {
   if (!editForm.value.name || !editForm.value.slug) {
-    alert('请填写名称和标识');
+    showToast('请填写名称和标识', 'warn');
     return;
   }
 
@@ -140,23 +141,25 @@ const handleUpdate = async (id) => {
     });
     await fetchCategories();
     cancelEdit();
-    alert('更新成功');
+    showToast('更新成功', 'success');
   } catch (error) {
     console.error('更新失败:', error);
-    alert('更新失败');
+    showToast('更新失败', 'error', 3000);
   }
 };
 
+import { confirm as askConfirm } from '../../utils/confirm';
 const handleDelete = async (id) => {
-  if (!confirm('确定要删除这个分类吗？')) return;
+  const ok = await askConfirm('确定要删除这个分类吗？', { title: '删除分类确认', okText: '删除', cancelText: '取消', type: 'warn' });
+  if (!ok) return;
 
   try {
     await apiAdminCategories.delete(id);
     await fetchCategories();
-    alert('删除成功');
+    showToast('删除成功', 'success');
   } catch (error) {
     console.error('删除失败:', error);
-    alert('删除失败');
+    showToast('删除失败', 'error', 3000);
   }
 };
 

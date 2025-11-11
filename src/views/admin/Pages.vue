@@ -48,6 +48,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { apiAdminPages } from '../../api/admin.js';
+import { showToast } from '../../utils/toast';
 
 const pages = ref([]);
 const loading = ref(false);
@@ -59,22 +60,24 @@ const fetchPages = async () => {
     pages.value = response.data.pages || response.data || [];
   } catch (error) {
     console.error('获取页面列表失败:', error);
-    alert('获取页面列表失败');
+    showToast('获取页面列表失败', 'error', 3000);
   } finally {
     loading.value = false;
   }
 };
 
+import { confirm as askConfirm } from '../../utils/confirm';
 const handleDelete = async (id) => {
-  if (!confirm('确定要删除这个页面吗？')) return;
+  const ok = await askConfirm('确定要删除这个页面吗？', { title: '删除页面确认', okText: '删除', cancelText: '取消', type: 'warn' });
+  if (!ok) return;
   
   try {
     await apiAdminPages.delete(id);
     await fetchPages();
-    alert('删除成功');
+    showToast('删除成功', 'success');
   } catch (error) {
     console.error('删除失败:', error);
-    alert('删除失败');
+    showToast('删除失败', 'error', 3000);
   }
 };
 

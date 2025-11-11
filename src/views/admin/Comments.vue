@@ -56,6 +56,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { apiAdminComments } from '../../api/admin.js';
+import { showToast } from '../../utils/toast';
 
 const comments = ref([]);
 const search = ref('');
@@ -68,7 +69,7 @@ const fetchComments = async () => {
     comments.value = response.data.comments || response.data || [];
   } catch (error) {
     console.error('获取评论列表失败:', error);
-    alert('获取评论列表失败');
+    showToast('获取评论列表失败', 'error', 3000);
   } finally {
     loading.value = false;
   }
@@ -77,24 +78,26 @@ const fetchComments = async () => {
 const handleStatusChange = async (id, status) => {
   try {
     await apiAdminComments.updateStatus(id, status);
-    alert('状态更新成功');
+    showToast('状态更新成功', 'success');
   } catch (error) {
     console.error('更新状态失败:', error);
-    alert('更新状态失败');
+    showToast('更新状态失败', 'error', 3000);
     await fetchComments();
   }
 };
 
+import { confirm as askConfirm } from '../../utils/confirm';
 const handleDelete = async (id) => {
-  if (!confirm('确定要删除这条评论吗？')) return;
+  const ok = await askConfirm('确定要删除这条评论吗？', { title: '删除评论确认', okText: '删除', cancelText: '取消', type: 'warn' });
+  if (!ok) return;
 
   try {
     await apiAdminComments.delete(id);
     await fetchComments();
-    alert('删除成功');
+    showToast('删除成功', 'success');
   } catch (error) {
     console.error('删除失败:', error);
-    alert('删除失败');
+    showToast('删除失败', 'error', 3000);
   }
 };
 
