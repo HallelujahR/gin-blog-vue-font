@@ -24,11 +24,14 @@
           :left-toolbar="leftToolbar"
           :right-toolbar="rightToolbar"
           :config="editorConfig"
+          :disabled-menus="[]"
+          @upload-image="onEditorUploadImage"
           :mode="editorMode"
           autofocus
           @save="handleSubmit"
           @fullscreen-change="onEditorFullscreenChange"
         />
+        <input ref="toolbarImageInput" type="file" accept="image/*" style="display:none" @change="onToolbarImageSelect">
         <div v-if="uploadingImage" class="md-uploading-tip">图片上传中，请稍候...</div>
       </div>
 
@@ -122,7 +125,7 @@ const isEditorFullscreen = ref(false);
 const editorMode = ref('editable-preview'); // auto switch if fenced code block unclosed
 const uploadingImage = ref(false);
 
-const leftToolbar = 'undo redo clear | h bold italic strikethrough quote | ul ol todo-list table | link image code | save preview toc sync-scroll fullscreen | html2md';
+const leftToolbar = 'undo redo clear | h bold italic strikethrough quote | ul ol todo-list table | link image code | save preview toc sync-scroll fullscreen | html2md localImage';
 const rightToolbar = 'preview toc sync-scroll fullscreen';
 const editorHeight = computed(() => (isEditorFullscreen.value ? '100%' : '560px'));
 
@@ -137,49 +140,6 @@ const form = ref({
 });
 
 const editorConfig = {
-  uploadImg: {
-    async handler(files) {
-      const validFiles = Array.from(files).filter((file) => {
-        if (!file.type.startsWith('image/')) {
-          alert('仅支持上传图片文件');
-          return false;
-        }
-        if (file.size > 5 * 1024 * 1024) {
-          alert(`图片 ${file.name} 大小超过 5MB，已跳过`);
-          return false;
-        }
-        return true;
-      });
-
-      if (!validFiles.length) return [];
-
-      uploadingImage.value = true;
-      try {
-        const urls = [];
-        for (const file of validFiles) {
-          const res = await apiAdminUpload.uploadImage(file);
-          const url = res.data?.url ||
-                      res.data?.image_url ||
-                      res.data?.data?.url ||
-                      res.data?.data?.image_url ||
-                      res.data?.path ||
-                      '';
-          if (url) {
-            urls.push(url);
-          } else {
-            alert(`图片 ${file.name} 上传成功但未返回 URL`);
-          }
-        }
-        return urls;
-      } catch (error) {
-        console.error('上传图片失败', error);
-        alert('上传图片失败，请稍后重试');
-        return [];
-      } finally {
-        uploadingImage.value = false;
-      }
-    },
-  },
   toolbar: {
     html2md: {
       title: 'HTML 转 Markdown',
@@ -195,7 +155,7 @@ const editorConfig = {
             });
             const html = form.value.content || '';
             if (!html || !/<[a-z][\s\S]*>/i.test(html)) {
-              alert('当前内容不是 HTML，或为空');
+              showToast('当前内容不是 HTML，或为空', 'warn');
               return;
             }
             const mdText = td.turndown(html);
@@ -203,12 +163,126 @@ const editorConfig = {
           });
         } catch (e) {
           console.error('HTML 转换失败', e);
-          alert('HTML 转 Markdown 失败，请稍后重试');
+          showToast('HTML 转 Markdown 失败，请稍后重试', 'error', 3200);
+        }
+      }
+    },
+    localImage: {
+      title: '上传本地图片',
+      icon: 'v-md-icon-image',
+      action(editor) {
+        pendingEditor.value = editor;
+        if (toolbarImageInput.value) {
+          toolbarImageInput.value.value = '';
+          toolbarImageInput.value.click();
+        } else {
+          showToast('无法打开文件选择器', 'error');
         }
       }
     }
   }
 };
+
+// v-md-editor 的上传钩子（作为组件属性传入）
+async function uploadImageHandler(files, insertImage, onError) {
+  const list = Array.from(files || []);
+  if (!list.length) return [];
+  const validFiles = list.filter((file) => {
+    if (!file.type || !file.type.startsWith('image/')) {
+      showToast('仅支持上传图片文件', 'warn');
+      return false;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      showToast(`图片 ${file.name} 大小超过 5MB，已跳过`, 'warn');
+      return false;
+    }
+    return true;
+  });
+  if (!validFiles.length) return [];
+
+  uploadingImage.value = true;
+  try {
+    const urls = [];
+    for (const file of validFiles) {
+      const res = await apiAdminUpload.uploadImage(file);
+      const url = res.data?.url ||
+                  res.data?.image_url ||
+                  res.data?.data?.url ||
+                  res.data?.data?.image_url ||
+                  res.data?.path ||
+                  res.data?.data?.path ||
+                  '';
+      if (url) {
+        urls.push(url);
+        if (typeof insertImage === 'function') {
+          insertImage({ url, desc: file.name });
+        }
+      } else {
+        showToast(`图片 ${file.name} 上传成功但未返回 URL`, 'warn');
+      }
+    }
+    return urls;
+  } catch (error) {
+    console.error('上传图片失败', error);
+    if (typeof onError === 'function') onError(error);
+    showToast('上传图片失败，请稍后重试', 'error', 3200);
+    return [];
+  } finally {
+    uploadingImage.value = false;
+  }
+}
+
+// v-md-editor 文档风格事件：@upload-image="(event, insertImage, files) => {}"
+function onEditorUploadImage(event, insertImage, files) {
+  // 兼容不同调用方，复用同一实现
+  return uploadImageHandler(files, insertImage);
+}
+
+const toolbarImageInput = ref(null);
+const pendingEditor = ref(null);
+async function onToolbarImageSelect(e) {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  if (!file.type || !file.type.startsWith('image/')) {
+    showToast('仅支持上传图片文件', 'warn');
+    return;
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    showToast(`图片 ${file.name} 大小超过 5MB，已跳过`, 'warn');
+    return;
+  }
+  uploadingImage.value = true;
+  try {
+    const res = await apiAdminUpload.uploadImage(file);
+    const url = res.data?.url ||
+                res.data?.image_url ||
+                res.data?.data?.url ||
+                res.data?.data?.image_url ||
+                res.data?.path ||
+                res.data?.data?.path ||
+                '';
+    if (!url) {
+      showToast('上传成功但未返回 URL', 'warn');
+      return;
+    }
+    // 优先使用编辑器实例插入（v-md-editor 官方方式）
+    if (pendingEditor.value && typeof pendingEditor.value.insert === 'function') {
+      pendingEditor.value.insert(() => ({
+        text: `![${file.name}](${url})`
+      }));
+    } else {
+      // 回退：直接在光标处插入
+      form.value.content = (form.value.content || '') + `\n\n![${file.name}](${url})\n`;
+    }
+    showToast('图片已插入', 'success');
+  } catch (error) {
+    console.error('上传图片失败', error);
+    showToast('上传图片失败，请稍后重试', 'error', 3200);
+  } finally {
+    uploadingImage.value = false;
+    pendingEditor.value = null;
+  }
+}
 
 // 处理图片选择（仅预览，不上传）
 const handleImageSelect = (e) => {
