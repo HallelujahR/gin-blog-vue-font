@@ -44,6 +44,16 @@
             </div>
             <router-link :to="`/blog/${blog.id}`" class="blog-card-title" style="position:relative;z-index:2;">{{ blog.title }}</router-link>
             <div class="blog-card-desc" style="position:relative;z-index:2;">{{ blog.excerpt }}</div>
+            <div class="blog-card-stats" style="position:relative;z-index:2;">
+              <span class="blog-stat-item">
+                <span class="blog-stat-icon">👁️</span>
+                <span class="blog-stat-text">{{ blog.view_count || 0 }}</span>
+              </span>
+              <span class="blog-stat-item" v-if="blog.like_count">
+                <span class="blog-stat-icon">👍</span>
+                <span class="blog-stat-text">{{ blog.like_count }}</span>
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -211,5 +221,28 @@ function formatDate(dateStr) {
 .blog-meta-chip { background:#f3f6ff; border:1px solid #e4ecff; color:#4f46e5; font-size:12px; padding:4px 10px; border-radius:999px; font-weight:500; }
 .blog-card-date { font-size:14px; color:var(--muted); }
 .blog-card-title { color:var(--text); font-size:22px; font-weight:700; margin:6px 0 10px 0; display:block; }
-.blog-card-desc { color:#b8c6e2; font-size:15px; line-height:1.72; }
+.blog-card-desc { color:#b8c6e2; font-size:15px; line-height:1.72; margin-bottom: 12px; }
+.blog-card-stats { 
+  display: flex; 
+  align-items: center; 
+  gap: 16px; 
+  margin-top: auto; 
+  padding-top: 12px; 
+  border-top: 1px solid rgba(226, 232, 240, 0.5); 
+}
+.blog-stat-item { 
+  display: inline-flex; 
+  align-items: center; 
+  gap: 4px; 
+  color: #94a3b8; 
+  font-size: 13px; 
+}
+.blog-stat-icon { 
+  font-size: 14px; 
+  line-height: 1; 
+}
+.blog-stat-text { 
+  font-size: 13px; 
+  font-weight: 500; 
+}
 </style>

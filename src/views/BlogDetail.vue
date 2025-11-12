@@ -34,12 +34,17 @@
         <v-md-preview :text="blog.content || ''" class="detail-markdown" />
       </template>
       <div class="detail-stats">
-        <button @click="toggleLike" class="stat-btn">
-          <span class="stat-icon">👍</span>
+        <button @click="toggleLike" :class="['stat-btn', 'stat-like', { 'liked': isLiked }]">
+          <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+          </svg>
           <span class="stat-text">点赞 {{ likeCount }}</span>
         </button>
         <span class="stat-btn stat-view">
-          <span class="stat-icon">👁️</span>
+          <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
           <span class="stat-text">浏览 {{ viewCount }}</span>
         </span>
       </div>
@@ -47,10 +52,14 @@
     <div class="detail-comment-box">
       <h2>评论</h2>
       <Comment :comments="comments" @reply="handleReply" />
-      <input v-model="authorName" placeholder="你的名字" class="comment-input" />
-      <input v-model="authorEmail" placeholder="你的邮箱" class="comment-input" />
-      <textarea v-model="newComment" placeholder="写下你的评论..."/>
-      <button @click="submitComment">发表评论</button>
+      <div class="comment-form">
+        <div class="comment-input-row">
+          <input v-model="authorName" placeholder="你的名字" class="comment-input comment-input-name" />
+          <input v-model="authorEmail" placeholder="你的邮箱" class="comment-input comment-input-email" />
+        </div>
+        <textarea v-model="newComment" placeholder="写下你的评论..." class="comment-textarea"/>
+        <button @click="submitComment" class="comment-submit-btn">发表评论</button>
+      </div>
     </div>
   </div>
 </template>
@@ -75,7 +84,7 @@ const authorName = ref('访客');
 const authorEmail = ref('guest@example.com');
 const likeCount = ref(0);
 const viewCount = ref(0);
-const fakeUserId = 1; // 可替换为真实登录用户ID
+const isLiked = ref(false);
 
 // 存储所有分类和标签，用于匹配slug
 const allCategories = ref([]);
@@ -153,8 +162,9 @@ const fetchBlog = async () => {
     tags: tags
   };
   
-  // 获取浏览量
+  // 从文章详情直接获取浏览量和点赞数（后端已自动记录浏览）
   viewCount.value = blog.value.view_count || 0;
+  likeCount.value = blog.value.like_count || 0;
 };
 
 // 获取所有分类和标签（用于匹配slug）
@@ -186,24 +196,20 @@ const fetchComments = async () => {
   const flat = (commentRes.data.comments || []).map(c => ({ id: c.id, content: c.content, author_name: c.author_name, created_at: c.created_at, parent_id: c.parent_id }));
   comments.value = buildTree(flat);
 };
-const fetchLikeCount = async () => {
-  const id = route.params.id;
-  const res = await apiLike.countForPost(id);
-  likeCount.value = res.data.count || 0;
-};
+// 点赞数已从文章详情中获取，无需单独请求
 
 onMounted(async () => {
   // 先获取所有分类和标签，用于匹配slug
   await fetchAllCategoriesAndTags();
   await fetchBlog();
-  await Promise.all([fetchComments(), fetchLikeCount()]);
+  await fetchComments();
 });
 
 // 当路由 id 变化时，重新加载详情（同组件复用场景）
 watch(() => route.params.id, async () => {
   await fetchAllCategoriesAndTags();
   await fetchBlog();
-  await Promise.all([fetchComments(), fetchLikeCount()]);
+  await fetchComments();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
@@ -221,8 +227,15 @@ function handleReply(content, parentId) {
 }
 async function toggleLike() {
   const id = Number(route.params.id);
-  await apiLike.toggleForPost(fakeUserId, id);
-  await fetchLikeCount();
+  try {
+    await apiLike.toggleForPost(id);
+    // 重新获取点赞数（后端基于IP自动处理）
+    const res = await apiLike.countForPost(id);
+    likeCount.value = res.data.count || 0;
+    isLiked.value = !isLiked.value;
+  } catch (error) {
+    console.error('点赞失败:', error);
+  }
 }
 </script>
 <style scoped>
@@ -236,14 +249,144 @@ async function toggleLike() {
 .detail-meta-chip { display: inline-block; background: #f3f6ff; border: 1px solid #e4ecff; color: #4f46e5; font-size: 12px; padding: 4px 10px; border-radius: 999px; font-weight: 500; text-decoration: none; transition: all 0.2s ease; }
 .detail-meta-chip:hover { background: #e0e7ff; border-color: #c7d2fe; color: #3730a3; transform: translateY(-1px); }
 .detail-markdown { color: #334155; font-size:17px; line-height:1.95; background:#ffffff; border-radius:10px; padding:22px 24px; border:1px solid #eef2f7; margin-bottom: 20px; }
-.detail-stats { display: flex; align-items: center; gap: 16px; margin-top: 24px; padding-top: 20px; border-top: 1px solid #eef2f7; }
-.stat-btn { display: inline-flex; align-items: center; gap: 6px; padding: 0; border: none; background: transparent; color: #64748b; font-size: 13px; cursor: pointer; transition: all 0.2s ease; font-weight: 500; line-height: 1.5; }
-.stat-btn:hover { color: #475569; }
-.stat-btn.stat-view { cursor: default; }
-.stat-btn.stat-view:hover { color: #64748b; }
-.stat-icon { font-size: 14px; line-height: 1; }
-.stat-text { font-size: 13px; line-height: 1.5; }
-.detail-comment-box { margin-top: 22px; background:#ffffff; border-radius:12px; padding:22px; color: var(--text); border:1px solid #eef2f7; }
-.comment-input { width:100%; margin:8px 0; padding:10px 12px; border-radius:10px; border:1px solid #e6eef6; background:#fff; color:#1e293b; }
-.detail-comment-box h2 { color:#1e293b; }
+.detail-stats { 
+  display: flex; 
+  align-items: center; 
+  gap: 32px; 
+  margin-top: 32px; 
+  padding-top: 24px; 
+  border-top: 1px solid #eef2f7; 
+}
+.stat-btn { 
+  display: inline-flex; 
+  align-items: center; 
+  justify-content: flex-start; 
+  gap: 6px; 
+  padding: 0; 
+  margin: 0; 
+  border: none; 
+  background: transparent; 
+  border-radius: 0; 
+  color: #64748b; 
+  font-size: 14px; 
+  cursor: pointer; 
+  transition: color 0.2s ease; 
+  font-weight: 400; 
+  line-height: 1; 
+  height: 20px; 
+  vertical-align: top; 
+}
+.stat-btn:hover { 
+  color: #475569; 
+}
+.stat-btn.stat-view { 
+  cursor: default; 
+  color: #94a3b8; 
+}
+.stat-btn.stat-view:hover { 
+  color: #94a3b8; 
+}
+.stat-btn.stat-like.liked { 
+  color: #dc2626; 
+}
+.stat-btn.stat-like.liked:hover { 
+  color: #b91c1c; 
+}
+.stat-icon { 
+  width: 16px; 
+  height: 16px; 
+  flex-shrink: 0; 
+  display: inline-block; 
+  vertical-align: middle; 
+  margin: 0; 
+  padding: 0; 
+}
+.stat-text { 
+  font-size: 14px; 
+  line-height: 20px; 
+  font-weight: 400; 
+  letter-spacing: 0.01em; 
+  display: inline-block; 
+  margin: 0; 
+  padding: 0; 
+  vertical-align: middle; 
+  height: 20px; 
+}
+.detail-comment-box { 
+  margin-top: 22px; 
+  background:#ffffff; 
+  border-radius:12px; 
+  padding:22px; 
+  color: var(--text); 
+  border:1px solid #eef2f7; 
+}
+.detail-comment-box h2 { 
+  color:#1e293b; 
+  font-size: 20px; 
+  font-weight: 600; 
+  margin: 0 0 20px 0; 
+}
+.comment-form { 
+  margin-top: 20px; 
+}
+.comment-input-row { 
+  display: flex; 
+  gap: 12px; 
+  margin-bottom: 12px; 
+}
+.comment-input { 
+  flex: 1; 
+  padding: 10px 12px; 
+  border-radius: 8px; 
+  border: 1px solid #e6eef6; 
+  background: #fff; 
+  color: #1e293b; 
+  font-size: 14px; 
+  transition: border-color 0.2s ease; 
+}
+.comment-input:focus { 
+  outline: none; 
+  border-color: #cbd5e1; 
+}
+.comment-input::placeholder { 
+  color: #94a3b8; 
+}
+.comment-textarea { 
+  width: 100%; 
+  min-height: 100px; 
+  padding: 10px 12px; 
+  margin-bottom: 12px; 
+  border-radius: 8px; 
+  border: 1px solid #e6eef6; 
+  background: #fff; 
+  color: #1e293b; 
+  font-size: 14px; 
+  font-family: inherit; 
+  resize: vertical; 
+  transition: border-color 0.2s ease; 
+}
+.comment-textarea:focus { 
+  outline: none; 
+  border-color: #cbd5e1; 
+}
+.comment-textarea::placeholder { 
+  color: #94a3b8; 
+}
+.comment-submit-btn { 
+  padding: 10px 24px; 
+  border-radius: 8px; 
+  border: none; 
+  background: #4f46e5; 
+  color: #fff; 
+  font-size: 14px; 
+  font-weight: 500; 
+  cursor: pointer; 
+  transition: background-color 0.2s ease; 
+}
+.comment-submit-btn:hover { 
+  background: #4338ca; 
+}
+.comment-submit-btn:active { 
+  background: #3730a3; 
+}
 </style>

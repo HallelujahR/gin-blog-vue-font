@@ -70,6 +70,6 @@ export const apiHot = {
 };
 
 export const apiLike = {
-  toggleForPost: (userId, postId) => http.post('/like/toggle', { user_id: userId, post_id: postId }),
+  toggleForPost: (postId) => http.post('/like/toggle', { post_id: postId }),
   countForPost: (postId) => http.get('/like/count', { params: { post_id: postId } }),
 };
