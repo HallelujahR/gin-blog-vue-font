@@ -4,6 +4,7 @@ import { adminRoutes, adminBeforeEach } from './admin.js';
 // 前台路由
 const frontRoutes = [
   { path: '/', name: 'Home', component: () => import('../views/Home.vue') },
+  { path: '/tools', name: 'Tools', component: () => import('../views/Tools.vue') },
   { path: '/about', name: 'About', component: () => import('../views/About.vue') },
   { path: '/blog/:id', name: 'BlogDetail', component: () => import('../views/BlogDetail.vue'), props: true }
 ];

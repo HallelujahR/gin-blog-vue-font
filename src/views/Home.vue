@@ -1,36 +1,6 @@
 <template>
   <div class="layout">
     <div class="main">
-      <div class="blog-search-bar">
-        <input v-model="search" class="blog-search-input" type="text" placeholder="Search posts..." @keyup.enter="reload" />
-        <div class="blog-search-btns">
-          <button class="icon-btn" title="按时间排序" @click="toggleSort">
-            <span style="color:#c9d3ea;font-size:12px;">{{ sortLabel }}</span>
-          </button>
-          <button class="icon-btn" title="筛选" @click="showFilter = !showFilter">🔍</button>
-        </div>
-      </div>
-
-      <transition name="fade">
-        <div v-if="showFilter" class="filter-panel">
-          <div class="filter-row">
-            <span class="filter-title">分类</span>
-            <button v-for="c in categories" :key="c.id" class="chip"
-              :class="{active: route.query.category === c.slug}"
-              @click="applyQuery({ category: route.query.category === c.slug ? undefined : c.slug })">{{ c.name }}</button>
-          </div>
-          <div class="filter-row">
-            <span class="filter-title">标签</span>
-            <button v-for="t in tags" :key="t.id" class="chip"
-              :class="{active: route.query.tag === t.slug}"
-              @click="applyQuery({ tag: route.query.tag === t.slug ? undefined : t.slug })">#{{ t.name }}</button>
-          </div>
-          <div class="filter-row">
-            <button class="chip" @click="clearFilters">清除筛选</button>
-          </div>
-        </div>
-      </transition>
-
       <div id="list" class="list-masonry">
         <div v-for="blog in list" :key="blog.id" class="blog-card" @click="goDetail(blog.id)" style="cursor:pointer; position:relative;">
           <img v-if="blog.cover_image && !blog._imgError" :src="blog.cover_image" class="blog-card-img" alt="cover" @error="blog._imgError = true"/>
@@ -45,14 +15,8 @@
             <router-link :to="`/blog/${blog.id}`" class="blog-card-title" style="position:relative;z-index:2;">{{ blog.title }}</router-link>
             <div class="blog-card-desc" style="position:relative;z-index:2;">{{ blog.excerpt }}</div>
             <div class="blog-card-stats" style="position:relative;z-index:2;">
-              <span class="blog-stat-item">
-                <span class="blog-stat-icon">👁️</span>
-                <span class="blog-stat-text">{{ blog.view_count || 0 }}</span>
-              </span>
-              <span class="blog-stat-item" v-if="blog.like_count">
-                <span class="blog-stat-icon">👍</span>
-                <span class="blog-stat-text">{{ blog.like_count }}</span>
-              </span>
+              <span class="stat-btn stat-like">点赞 {{ blog.like_count || 0 }}</span>
+              <span class="stat-btn stat-view">浏览 {{ blog.view_count || 0 }}</span>
             </div>
           </div>
         </div>
@@ -77,11 +41,6 @@ const router = useRouter();
 const categories = ref([]);
 const tags = ref([]);
 
-const search = ref('');
-const sortDesc = ref(true);
-const sortLabel = computed(() => sortDesc.value ? '最新' : '最旧');
-const showFilter = ref(false);
-
 const pageSize = 6;
 const page = ref(1);
 const total = ref(null);
@@ -102,10 +61,10 @@ async function fetchPage(p = 1) {
   const params = {
     page: p,
     size: pageSize,
-    q: search.value || undefined,
+    q: route.query.q || undefined,
     category: route.query.category,
     tag: route.query.tag,
-    sort: sortDesc.value ? 'desc' : 'asc',
+    sort: route.query.sort || 'desc',
   };
   const res = await apiPosts.list(params);
   const raw = res.data.posts || res.data || [];
@@ -171,13 +130,11 @@ function reload() {
   fetchPage(1);
 }
 
-function toggleSort() { sortDesc.value = !sortDesc.value; reload(); }
-function applyQuery(q) { router.replace({ name: 'Home', query: { ...route.query, ...q } }); }
-function clearFilters() { router.replace({ name: 'Home', query: {} }); }
 function goDetail(id) { router.push(`/blog/${id}`); }
 
-watch(() => [route.query.category, route.query.tag], () => reload());
-watch(() => search.value, (v, o) => {}, { flush: 'post' });
+watch(() => [route.query.category, route.query.tag, route.query.q, route.query.sort], () => {
+  reload();
+});
 
 onMounted(async () => {
   await fetchMeta();
@@ -205,12 +162,6 @@ function formatDate(dateStr) {
 .fade-enter-from,.fade-leave-to { opacity: 0; }
 .list-masonry { display:flex; flex-direction:column; }
 .loading { text-align:center; color:var(--muted); margin: 8px 0 16px; }
-.blog-search-bar { display:flex; align-items:center; background:var(--card); border:1px solid var(--border); border-radius:12px; margin-bottom:12px; padding:14px 16px; }
-.blog-search-input { flex:1; padding:10px 13px; font-size:16px; border-radius:8px; border:none; background:var(--bg); color:var(--text); }
-.blog-search-input:focus { outline:none; filter: brightness(1.05); }
-.blog-search-btns { display:flex; gap:9px; margin-left:8px; }
-.icon-btn { background:none; border:1px solid var(--border); color:var(--text); padding:6px 9px; cursor:pointer; border-radius:8px; height:36px; display:flex; align-items:center; }
-.icon-btn:hover { filter: brightness(0.95); }
 .blog-card { background:var(--card); color:var(--text); border:none; border-radius:14px; display:flex; margin-bottom:22px; box-shadow:0 6px 18px rgba(17,24,39,.06); overflow:hidden; transition:box-shadow .2s, transform .2s; }
 .blog-card:hover { box-shadow:0 16px 32px rgba(17,24,39,.12); transform: translateY(-2px); }
 .blog-card-img { width:310px; height:180px; object-fit:cover; background:#1b2336; flex-shrink:0; }
@@ -222,27 +173,9 @@ function formatDate(dateStr) {
 .blog-card-date { font-size:14px; color:var(--muted); }
 .blog-card-title { color:var(--text); font-size:22px; font-weight:700; margin:6px 0 10px 0; display:block; }
 .blog-card-desc { color:#b8c6e2; font-size:15px; line-height:1.72; margin-bottom: 12px; }
-.blog-card-stats { 
-  display: flex; 
-  align-items: center; 
-  gap: 16px; 
-  margin-top: auto; 
-  padding-top: 12px; 
-  border-top: 1px solid rgba(226, 232, 240, 0.5); 
-}
-.blog-stat-item { 
-  display: inline-flex; 
-  align-items: center; 
-  gap: 4px; 
-  color: #94a3b8; 
-  font-size: 13px; 
-}
-.blog-stat-icon { 
-  font-size: 14px; 
-  line-height: 1; 
-}
-.blog-stat-text { 
-  font-size: 13px; 
-  font-weight: 500; 
-}
+.blog-card-stats { display:flex; align-items:center; gap:24px; padding-top: 12px; border-top: 1px solid rgba(226, 232, 240, 0.5); }
+.stat-btn { display:inline-flex; align-items:center; justify-content:flex-start; gap:6px; padding:0; margin:0; border:none; background:transparent; color:#64748b; font-size:14px; line-height:20px; height:20px; font-weight:400; transition:color 0.2s ease; }
+.stat-btn.stat-view { color:#94a3b8; }
+.stat-btn:hover { color:#475569; }
+.stat-btn.stat-view:hover { color:#94a3b8; }
 </style>
