@@ -32,7 +32,6 @@
             class="top-post"
             :style="{ backgroundColor: post.bgColor }"
           >
-            <span class="rank">{{ index + 1 }}</span>
             <router-link :to="post.route" class="title">{{ post.title }}</router-link>
             <span class="count">{{ post.count }} 次访问</span>
           </li>
@@ -232,7 +231,7 @@ onUnmounted(() => {
 .top-post {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   padding: 10px 12px;
   border-radius: 12px;
   border: 1px solid rgba(99, 102, 241, 0.1);
@@ -241,18 +240,6 @@ onUnmounted(() => {
 .top-post:hover {
   transform: translateY(-1px);
   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
-}
-.rank {
-  width: 24px;
-  height: 24px;
-  border-radius: 12px;
-  background: rgba(99, 102, 241, 0.1);
-  color: #6366f1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  font-size: 12px;
 }
 .title {
   color: var(--text);

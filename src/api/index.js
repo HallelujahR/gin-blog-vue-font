@@ -73,3 +73,7 @@ export const apiLike = {
   toggleForPost: (postId) => http.post('/like/toggle', { post_id: postId }),
   countForPost: (postId) => http.get('/like/count', { params: { post_id: postId } }),
 };
+
+export const apiStats = {
+  summary: () => http.get('/stats'),
+};

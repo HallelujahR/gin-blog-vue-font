@@ -1,5 +1,5 @@
 <template>
-  <aside class="sidebar">
+<aside class="sidebar">
     <section class="box">
       <h3>分类</h3>
       <div class="chips">
@@ -92,7 +92,7 @@ function toggleTag(slug) {
 }
 </script>
 <style scoped>
-.sidebar { position: sticky; top: calc(var(--nav-height) + 12px); display: flex; flex-direction: column; gap: 16px; }
+.sidebar { display: flex; flex-direction: column; gap: 16px; width: 100%; }
 .box { background: var(--card); border: none; border-radius: 12px; padding:14px 16px; box-shadow: 0 6px 18px rgba(17,24,39,.04); transition: box-shadow .2s ease; }
 .box:hover { box-shadow: 0 10px 24px rgba(17,24,39,.08); }
 h3 { margin: 0 0 10px; font-size:16px; color: var(--text); }

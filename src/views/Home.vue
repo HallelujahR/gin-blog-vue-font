@@ -1,5 +1,6 @@
 <template>
-  <div class="layout">
+  <div class="home-page">
+    <div class="layout">
     <div class="main">
       <div id="list" class="list-masonry">
         <div v-for="blog in list" :key="blog.id" class="blog-card" @click="goDetail(blog.id)" style="cursor:pointer; position:relative;">
@@ -25,16 +26,21 @@
       <div v-if="loading" class="loading">加载中...</div>
       <div v-if="!hasMore && list.length>0" class="loading">没有更多了</div>
     </div>
-    <div class="side">
-      <Sidebar />
+      <div class="side">
+        <div class="side-content">
+          <StatsOverview />
+          <Sidebar />
+        </div>
+      </div>
     </div>
   </div>
 </template>
 <script setup>
-import { ref, onMounted, watch, computed } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { apiPosts, apiMeta } from '../api';
 import Sidebar from '../components/Sidebar.vue';
+import StatsOverview from '../components/StatsOverview.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -149,9 +155,11 @@ function formatDate(dateStr) {
 }
 </script>
 <style scoped>
-.layout { display:grid; grid-template-columns: 1fr 320px; gap: 18px; }
+.home-page { position: relative; }
+.layout { display:grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 18px; align-items: start; }
 .main { min-width: 0; }
 .side { min-width: 0; }
+.side-content { position: sticky; top: calc(var(--nav-height) + 12px); display: flex; flex-direction: column; gap: 16px; }
 .filter-panel { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:12px; margin-bottom:12px; }
 .filter-row { display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px; }
 .filter-title { width:52px; color:var(--muted); font-size:13px; }
@@ -178,4 +186,9 @@ function formatDate(dateStr) {
 .stat-btn.stat-view { color:#94a3b8; }
 .stat-btn:hover { color:#475569; }
 .stat-btn.stat-view:hover { color:#94a3b8; }
+@media (max-width: 900px) {
+  .layout { display:flex; flex-direction: column; gap: 16px; }
+  .side { order: -1; }
+  .side-content { position: static; }
+}
 </style>
