@@ -33,7 +33,6 @@
             :style="{ backgroundColor: post.bgColor }"
           >
             <router-link :to="post.route" class="title">{{ post.title }}</router-link>
-            <span class="count">{{ post.count }} 次访问</span>
           </li>
           <li v-if="topPosts.length === 0" class="empty">暂无数据</li>
         </ul>
@@ -42,7 +41,7 @@
       <section class="sub-section" v-if="stats">
         <h4>地区分布</h4>
         <div class="regions">
-          <div v-for="region in regions" :key="region.name" class="region-row">
+          <div v-for="region in displayedRegions" :key="region.name" class="region-row">
             <div class="region-bar">
               <div class="fill" :style="{ width: region.percentage + '%' }"></div>
             </div>
@@ -53,6 +52,14 @@
           </div>
           <p v-if="regions.length === 0" class="empty">暂无地区数据</p>
         </div>
+        <button
+          v-if="regions.length > 3"
+          class="toggle-button"
+          type="button"
+          @click="showAllRegions = !showAllRegions"
+        >
+          {{ showAllRegions ? '收起' : `展开剩余 ${regions.length - 3} 个地区` }}
+        </button>
       </section>
     </template>
 
@@ -91,12 +98,19 @@ const topPosts = computed(() => {
   });
 });
 
+const showAllRegions = ref(false);
+
 const regions = computed(() => {
   if (!stats.value) return [];
   return stats.value.regionDistribution.map((r) => ({
     ...r,
     display: r.name === 'UNKNOWN' ? '未知地区' : r.name,
   }));
+});
+
+const displayedRegions = computed(() => {
+  if (showAllRegions.value) return regions.value;
+  return regions.value.slice(0, 3);
 });
 
 let retryTimer = null;
@@ -251,10 +265,6 @@ onUnmounted(() => {
 .title:hover {
   color: #6366f1;
 }
-.count {
-  font-size: 12px;
-  color: var(--muted);
-}
 .regions {
   display: flex;
   flex-direction: column;
@@ -285,6 +295,23 @@ onUnmounted(() => {
   justify-content: space-between;
   font-size: 12px;
   color: var(--muted);
+}
+.toggle-button {
+  margin-top: 12px;
+  width: 100%;
+  border: 1px dashed rgba(148, 163, 184, 0.8);
+  background: rgba(148, 163, 184, 0.08);
+  color: #475569;
+  padding: 8px 0;
+  border-radius: 10px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.toggle-button:hover {
+  background: rgba(79, 70, 229, 0.08);
+  color: #4338ca;
+  border-color: #a5b4fc;
 }
 .name {
   font-weight: 600;
