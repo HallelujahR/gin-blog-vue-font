@@ -3,8 +3,19 @@
     <div class="layout">
     <div class="main">
       <div id="list" class="list-masonry">
-        <div v-for="blog in list" :key="blog.id" class="blog-card" @click="goDetail(blog.id)" style="cursor:pointer; position:relative;">
-          <img v-if="blog.cover_image && !blog._imgError" :src="blog.cover_image" class="blog-card-img" alt="cover" @error="blog._imgError = true"/>
+        <div v-for="blog in list" :key="blog.id" class="blog-card" :class="{ 'no-media': !blog.cover_image || blog._imgError }" @click="goDetail(blog.id)" style="cursor:pointer; position:relative;">
+          <div
+            v-if="blog.cover_image && !blog._imgError"
+            class="blog-card-media"
+          >
+            <img
+              :src="blog.cover_image"
+              class="blog-card-img"
+              alt="cover"
+              loading="lazy"
+              @error="blog._imgError = true"
+            />
+          </div>
           <div class="blog-card-main">
             <div class="blog-card-meta">
               <div class="blog-card-meta-left">
@@ -170,10 +181,12 @@ function formatDate(dateStr) {
 .fade-enter-from,.fade-leave-to { opacity: 0; }
 .list-masonry { display:flex; flex-direction:column; }
 .loading { text-align:center; color:var(--muted); margin: 8px 0 16px; }
-.blog-card { background:var(--card); color:var(--text); border:none; border-radius:14px; display:flex; margin-bottom:22px; box-shadow:0 6px 18px rgba(17,24,39,.06); overflow:hidden; transition:box-shadow .2s, transform .2s; }
+.blog-card { background:var(--card); color:var(--text); border:none; border-radius:18px; display:flex; margin-bottom:22px; box-shadow:0 6px 18px rgba(17,24,39,.06); overflow:hidden; transition:box-shadow .2s, transform .2s; }
+.blog-card.no-media { flex-direction: column; }
 .blog-card:hover { box-shadow:0 16px 32px rgba(17,24,39,.12); transform: translateY(-2px); }
-.blog-card-img { width:310px; height:180px; object-fit:cover; background:#1b2336; flex-shrink:0; }
-.img-fallback { width:310px; height:180px; background:#f1f5f9; color:#94a3b8; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; }
+.blog-card-media { width:310px; height:180px; flex-shrink:0; border-radius:14px; overflow:hidden; margin:16px 0 16px 16px; background:#f1f5f9; position: relative; display:flex; align-items:center; justify-content:center; }
+.blog-card-img { width:100%; height:100%; object-fit:cover; transition: transform 0.5s ease; border-radius: inherit; }
+.blog-card:hover .blog-card-img { transform: scale(1.02); }
 .blog-card-main { flex:1; padding:28px 22px 22px 28px; display:flex; flex-direction:column; justify-content:center; }
 .blog-card-meta { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
 .blog-card-meta-left { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }

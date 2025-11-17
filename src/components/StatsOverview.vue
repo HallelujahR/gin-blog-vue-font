@@ -48,7 +48,7 @@
             </div>
             <div class="region-info">
               <span class="name">{{ region.display }}</span>
-              <span class="meta">{{ region.count }} 次 · {{ region.percentage }}%</span>
+              <span class="meta">{{ region.percentage }}%</span>
             </div>
           </div>
           <p v-if="regions.length === 0" class="empty">暂无地区数据</p>
