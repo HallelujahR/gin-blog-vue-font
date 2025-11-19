@@ -190,7 +190,15 @@ function formatDate(dateStr) {
 .blog-card-main { flex:1; padding:28px 22px 22px 28px; display:flex; flex-direction:column; justify-content:center; }
 .blog-card-meta { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
 .blog-card-meta-left { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
-.blog-meta-chip { background:#f3f6ff; border:1px solid #e4ecff; color:#4f46e5; font-size:12px; padding:4px 10px; border-radius:999px; font-weight:500; }
+.blog-meta-chip {
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.18);
+  color: #475569;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-weight: 500;
+}
 .blog-card-date { font-size:14px; color:var(--muted); }
 .blog-card-title { color:var(--text); font-size:22px; font-weight:700; margin:6px 0 10px 0; display:block; }
 .blog-card-desc { color:#b8c6e2; font-size:15px; line-height:1.72; margin-bottom: 12px; }
@@ -203,5 +211,32 @@ function formatDate(dateStr) {
   .layout { display:flex; flex-direction: column; gap: 16px; }
   .side { order: -1; }
   .side-content { position: static; }
+}
+
+@media (max-width: 640px) {
+  .blog-card {
+    flex-direction: column;
+    border-radius: 16px;
+  }
+  .blog-card-media {
+    width: calc(100% - 32px);
+    height: 200px;
+    margin: 16px;
+    border-radius: 14px;
+  }
+  .blog-card-main {
+    padding: 18px 16px 20px;
+  }
+  .blog-card-title {
+    font-size: 18px;
+    line-height: 1.4;
+  }
+  .blog-card-desc {
+    font-size: 14px;
+  }
+  .blog-card-stats {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
 }
 </style>
