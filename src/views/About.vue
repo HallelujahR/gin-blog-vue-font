@@ -13,6 +13,7 @@
         v-html="page.content"
         style="font-size:18px;color:var(--text);max-width:800px;margin:24px 0;line-height:1.8;"
       ></div>
+      <TechStack />
     </div>
     <div v-else style="text-align:center;padding:40px;color:#64748b;">
       <p>暂无内容</p>
@@ -22,6 +23,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import http from '../api/index.js';
+import TechStack from '../components/TechStack.vue';
 
 const page = ref(null);
 const loading = ref(true);
