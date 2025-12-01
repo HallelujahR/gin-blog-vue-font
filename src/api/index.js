@@ -3,7 +3,7 @@ import { adminAuth } from '../utils/auth.js';
 
 const http = axios.create({
   baseURL: import.meta.env.VITE_API_BASE || '/api',
-  timeout: 7000,
+  timeout: 30000,
 });
 
 // 请求拦截器：根据路径自动添加相应的token
@@ -76,4 +76,31 @@ export const apiLike = {
 
 export const apiStats = {
   summary: () => http.get('/stats'),
+};
+
+// 图片压缩工具 APIs（对齐公开工具接口 /api/tools/image-compress）
+export const apiImageCompress = {
+  // 累计统计数据：GET /api/tools/image-compress/stats
+  stats: () => http.get('/tools/image-compress/stats'),
+
+  // 启动压缩任务（同时上传图片）：POST /api/tools/image-compress/start
+  // form-data: images(可多文件), quality
+  startJob: (files, quality, onUploadProgress) => {
+    const form = new FormData();
+    const list = Array.isArray(files) ? files : [files];
+    list.forEach((f) => {
+      if (f) form.append('images', f);
+    });
+    form.append('quality', String(quality ?? 80));
+    return http.post('/tools/image-compress/start', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      onUploadProgress,
+      // 图片压缩任务可能较长，这里取消 Axios 自身的超时限制，完全交给后端与 SSE 控制
+      timeout: 0,
+    });
+  },
+
+  // SSE 进度流 URL：GET /api/tools/image-compress/stream?job_id=xxx
+  progressUrl: (jobId) =>
+    `/api/tools/image-compress/stream?job_id=${encodeURIComponent(jobId)}`,
 };
