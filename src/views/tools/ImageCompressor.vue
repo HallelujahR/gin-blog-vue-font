@@ -144,7 +144,7 @@ async function loadSummary() {
 function onMainClick() {
   if (stage.value === 'done') {
     if (downloadUrl.value) {
-    window.open(downloadUrl.value, '_blank');
+      triggerDownload(downloadUrl.value);
     } else {
       resetState();
       fileInput.value?.click();
@@ -270,6 +270,16 @@ function resetState() {
   processPercent.value = 0;
   stage.value = 'idle';
   error.value = '';
+}
+
+function triggerDownload(url) {
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = '';
+  link.style.display = 'none';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }
 
 onMounted(() => {
