@@ -48,12 +48,33 @@
             </td>
             <td class="actions-cell">
               <template v-if="editingId === category.id">
-                <button @click="handleUpdate(category.id)" class="save-btn">保存</button>
-                <button @click="cancelEdit" class="cancel-btn">取消</button>
+                <button @click="handleUpdate(category.id)" class="icon-btn save-btn" title="保存">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                    <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                    <polyline points="7 3 7 8 15 8"></polyline>
+                  </svg>
+                </button>
+                <button @click="cancelEdit" class="icon-btn cancel-btn" title="取消">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
               </template>
               <template v-else>
-                <button @click="startEdit(category)" class="edit-btn">编辑</button>
-                <button @click="handleDelete(category.id)" class="delete-btn">删除</button>
+                <button @click="startEdit(category)" class="icon-btn edit-btn" title="编辑">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                  </svg>
+                </button>
+                <button @click="handleDelete(category.id)" class="icon-btn delete-btn" title="删除">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  </svg>
+                </button>
               </template>
             </td>
           </tr>
@@ -169,11 +190,12 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* 全新明亮设计 - 整体明亮，边框浅色 */
+/* 苹果官网风格设计 */
 .admin-categories {
   height: 100%;
   display: flex;
   flex-direction: column;
+  background: #fbfbfd;
 }
 
 .categories-header {
@@ -181,74 +203,100 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   margin: 0;
-  padding: 24px;
-  padding-bottom: 20px;
-  border-bottom: 2px solid #f1f5f9;
+  padding: 0 40px;
+  height: 80px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   background: #ffffff;
+  box-sizing: border-box;
 }
 
 .categories-header h2 {
   margin: 0;
-  color: #1e293b;
-  font-size: 22px;
-  font-weight: 700;
+  color: #1d1d1f;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  line-height: 1.2;
+}
+
+.create-btn {
+  padding: 8px 16px;
+  height: 32px;
+  background: #0071e3;
+  color: #fff;
+  border: none;
+  border-radius: 980px;
+  font-size: 13px;
+  font-weight: 400;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.create-btn:hover {
+  background: #0077ed;
+  transform: translateY(-1px);
 }
 
 .create-form {
   background: #ffffff;
   border: none;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   border-radius: 0;
-  padding: 24px;
+  padding: 32px 40px;
   margin: 0;
-  box-shadow: none;
 }
 
 .create-form h3 {
-  margin: 0 0 24px;
-  color: #1e293b;
+  margin: 0 0 20px;
+  color: #1d1d1f;
   font-size: 18px;
-  font-weight: 700;
+  font-weight: 600;
+  letter-spacing: -0.2px;
 }
 
 .form-row {
   display: flex;
-  gap: 12px;
+  gap: 16px;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .input {
   flex: 1;
-  padding: 12px 18px;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  min-width: 220px;
+  padding: 10px 16px;
+  border: 1px solid #d2d2d7;
+  border-radius: 12px;
   background: #ffffff;
-  color: #1e293b;
+  color: #1d1d1f;
   font-size: 14px;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 .input:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #0071e3;
+  box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.1);
 }
 
 .inline-input {
-  padding: 8px 14px;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  padding: 6px 12px;
+  border: 1px solid #d2d2d7;
+  border-radius: 8px;
   background: #ffffff;
-  color: #1e293b;
-  font-size: 14px;
-  width: 150px;
-  transition: all 0.3s ease;
+  color: #1d1d1f;
+  font-size: 13px;
+  width: 160px;
+  transition: all 0.2s ease;
 }
 
 .inline-input:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #0071e3;
+  box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.1);
 }
 
 .categories-table {
@@ -258,7 +306,25 @@ onMounted(() => {
   overflow: hidden;
   flex: 1;
   overflow-y: auto;
-  box-shadow: none;
+  margin: 0;
+}
+
+.categories-table::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.categories-table::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.categories-table::-webkit-scrollbar-thumb {
+  background: #d2d2d7;
+  border-radius: 5px;
+}
+
+.categories-table::-webkit-scrollbar-thumb:hover {
+  background: #86868b;
 }
 
 table {
@@ -267,119 +333,133 @@ table {
 }
 
 thead {
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: #fbfbfd;
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 th {
-  padding: 16px 18px;
+  padding: 14px 24px;
   text-align: left;
-  color: #475569;
-  font-weight: 600;
-  font-size: 13px;
+  color: #86868b;
+  font-weight: 400;
+  font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  border-bottom: 2px solid #f1f5f9;
+  letter-spacing: 0.8px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  vertical-align: middle;
 }
 
 td {
-  padding: 16px 18px;
-  color: #1e293b;
+  padding: 14px 24px;
+  color: #1d1d1f;
   font-size: 14px;
-  border-bottom: 1px solid #f8fafc;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  vertical-align: middle;
 }
 
 tbody tr {
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease;
 }
 
 tbody tr:hover {
-  background: #f8fafc;
-  transform: scale(1.001);
+  background: #fbfbfd;
 }
 
 .actions-cell {
   display: flex;
-  gap: 10px;
+  gap: 8px;
+  align-items: center;
 }
 
-.edit-btn, .save-btn {
-  padding: 8px 16px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: #fff;
+.icon-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 13px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.25);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: #86868b;
 }
 
-.edit-btn:hover, .save-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.35);
+.icon-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  transform: scale(1.05);
+}
+
+.icon-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.edit-btn {
+  color: #0071e3;
+}
+
+.edit-btn:hover {
+  background: rgba(0, 113, 227, 0.1);
+  color: #0071e3;
+}
+
+.save-btn {
+  color: #0071e3;
+}
+
+.save-btn:hover {
+  background: rgba(0, 113, 227, 0.1);
+  color: #0071e3;
 }
 
 .delete-btn {
-  padding: 8px 16px;
-  background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
+  color: #ff3b30;
 }
 
 .delete-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
+  background: rgba(255, 59, 48, 0.1);
+  color: #ff3b30;
 }
 
 .cancel-btn {
-  padding: 8px 16px;
-  background: #ffffff;
-  color: #64748b;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 500;
-  transition: all 0.3s ease;
+  color: #86868b;
 }
 
 .cancel-btn:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
-  color: #475569;
+  background: rgba(0, 0, 0, 0.05);
+  color: #1d1d1f;
 }
 
 .submit-btn {
-  padding: 12px 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 8px 16px;
+  height: 32px;
+  background: #0071e3;
   color: #fff;
   border: none;
-  border-radius: 10px;
+  border-radius: 980px;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  font-size: 13px;
+  font-weight: 400;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+  align-items: center;
 }
 
 .submit-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+  background: #0077ed;
+  transform: translateY(-1px);
 }
 
 .loading, .empty {
   text-align: center;
-  padding: 40px;
-  color: #94a3b8;
+  padding: 80px 20px;
+  color: #86868b;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
+  background: #ffffff;
 }
 </style>
-

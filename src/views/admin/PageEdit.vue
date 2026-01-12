@@ -210,10 +210,12 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+/* 专业管理端设计 - 统一风格 */
 .admin-page-edit {
   height: 100%;
   display: flex;
   flex-direction: column;
+  background: #f8fafc;
 }
 
 .edit-header {
@@ -221,10 +223,11 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   align-items: center;
   margin: 0;
-  padding: 24px;
+  padding: 24px 28px;
   padding-bottom: 20px;
-  border-bottom: 2px solid #f1f5f9;
+  border-bottom: 1px solid #e2e8f0;
   background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .edit-header h2 {
@@ -232,97 +235,107 @@ onBeforeUnmount(() => {
   color: #1e293b;
   font-size: 22px;
   font-weight: 700;
+  letter-spacing: -0.3px;
 }
 
 .back-btn {
-  background: linear-gradient(95deg, var(--primary-1) 0%, var(--primary-2) 100%);
-  color: #fff;
-  border: none;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
   padding: 8px 16px;
-  font-size: 14px;
+  font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
-  transition: background .18s;
+  transition: all 0.2s ease;
 }
 
 .back-btn:hover {
-  filter: brightness(0.92);
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+  color: #334155;
 }
 
 .edit-form {
   background: #ffffff;
   border: none;
   border-radius: 0;
-  padding: 24px;
+  padding: 28px;
   flex: 1;
   overflow-y: auto;
   box-shadow: none;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 .form-group {
-  margin-bottom: 28px;
+  margin-bottom: 24px;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 10px;
-  color: #475569;
+  margin-bottom: 8px;
+  color: #334155;
   font-size: 14px;
   font-weight: 600;
+  letter-spacing: -0.2px;
 }
 
 .form-group input,
 .form-group textarea,
 .select-input {
   width: 100%;
-  padding: 14px 18px;
+  padding: 12px 16px;
   border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  border-radius: 8px;
   background: #ffffff;
   color: #1e293b;
   font-size: 14px;
   box-sizing: border-box;
   font-family: inherit;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 .form-group textarea {
   resize: vertical;
   font-family: inherit;
+  min-height: 80px;
 }
 
 .form-group input:focus,
 .form-group textarea:focus,
 .select-input:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #007AFF;
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
 }
 
 .form-actions {
   display: flex;
-  gap: 16px;
-  margin-top: 36px;
-  padding-top: 28px;
-  border-top: 1px solid #f1f5f9;
+  gap: 12px;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid #e2e8f0;
 }
 
 .submit-btn {
-  padding: 14px 28px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 10px 20px;
+  height: 40px;
+  background: #007AFF;
   color: #fff;
   border: none;
-  border-radius: 10px;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 15px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
 }
 
 .submit-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+  background: #0051D5;
 }
 
 .submit-btn:disabled {
@@ -332,41 +345,51 @@ onBeforeUnmount(() => {
 }
 
 .cancel-btn {
-  background: linear-gradient(95deg, var(--primary-1) 0%, var(--primary-2) 100%);
-  color: #fff;
+  background: #f5f5f7;
+  color: #1d1d1f;
   border: none;
   border-radius: 8px;
-  padding: 8px 16px;
+  padding: 10px 20px;
+  height: 40px;
   font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
-  transition: background .18s;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
 }
 
 .cancel-btn:hover {
-  filter: brightness(0.92);
+  background: #e5e5e7;
 }
 
 /* Quill编辑器样式 */
 .quill-editor {
   border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  border-radius: 8px;
   background: #ffffff;
-  min-height: 400px;
+  min-height: 500px;
+  transition: all 0.2s ease;
+}
+
+.quill-editor:hover {
+  border-color: #cbd5e1;
 }
 
 .quill-editor :deep(.ql-container) {
   font-size: 14px;
   font-family: inherit;
-  min-height: 350px;
-  border-bottom-left-radius: 10px;
-  border-bottom-right-radius: 10px;
+  min-height: 450px;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
 }
 
 .quill-editor :deep(.ql-toolbar) {
-  border-top-left-radius: 10px;
-  border-top-right-radius: 10px;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
   border-bottom: 1px solid #e2e8f0;
   background: #f8fafc;
+  padding: 12px;
 }
 
 .quill-editor :deep(.ql-toolbar .ql-stroke) {
@@ -379,17 +402,18 @@ onBeforeUnmount(() => {
 
 .quill-editor :deep(.ql-toolbar button:hover),
 .quill-editor :deep(.ql-toolbar button.ql-active) {
-  background: #e0e7ff;
+  background: #e5f0ff;
+  border-radius: 4px;
 }
 
 .quill-editor :deep(.ql-toolbar .ql-picker-label:hover) {
-  color: #667eea;
+  color: #007AFF;
 }
 
 .quill-editor :deep(.ql-editor) {
   color: #1e293b;
   line-height: 1.8;
-  padding: 18px;
+  padding: 20px;
 }
 
 .quill-editor :deep(.ql-editor.ql-blank::before) {
@@ -400,24 +424,29 @@ onBeforeUnmount(() => {
 .quill-editor :deep(.ql-editor img) {
   max-width: 100%;
   height: auto;
-  border-radius: 8px;
+  border-radius: 6px;
   margin: 16px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .quill-editor :deep(.ql-editor pre.ql-syntax) {
   background: #1e293b;
   color: #e2e8f0;
-  border-radius: 8px;
+  border-radius: 6px;
   padding: 16px;
   overflow-x: auto;
+  font-family: ui-monospace, monospace;
 }
 
 .quill-editor :deep(.ql-editor blockquote) {
-  border-left: 4px solid #667eea;
+  border-left: 4px solid #007AFF;
   padding-left: 16px;
   margin: 16px 0;
   color: #64748b;
   font-style: italic;
+  background: #f8fafc;
+  padding: 12px 16px;
+  border-radius: 0 6px 6px 0;
 }
 </style>
 

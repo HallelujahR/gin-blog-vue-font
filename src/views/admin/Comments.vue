@@ -6,7 +6,12 @@
 
     <div class="comments-filters">
       <input v-model="search" type="text" placeholder="搜索评论..." class="search-input" @keyup.enter="fetchComments" />
-      <button @click="fetchComments" class="search-btn">搜索</button>
+      <button @click="fetchComments" class="search-btn" title="搜索">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="m21 21-4.35-4.35"></path>
+        </svg>
+      </button>
     </div>
 
     <div class="comments-table">
@@ -41,7 +46,12 @@
             </td>
             <td>{{ formatDate(comment.created_at) }}</td>
             <td class="actions-cell">
-              <button @click="handleDelete(comment.id)" class="delete-btn">删除</button>
+              <button @click="handleDelete(comment.id)" class="icon-btn delete-btn" title="删除">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+              </button>
             </td>
           </tr>
         </tbody>
@@ -113,11 +123,12 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* 全新明亮设计 - 整体明亮，边框浅色 */
+/* 苹果官网风格设计 */
 .admin-comments {
   height: 100%;
   display: flex;
   flex-direction: column;
+  background: #fbfbfd;
 }
 
 .comments-header {
@@ -125,64 +136,71 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   margin: 0;
-  padding: 24px;
-  padding-bottom: 20px;
-  border-bottom: 2px solid #f1f5f9;
+  padding: 0 40px;
+  height: 80px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   background: #ffffff;
+  box-sizing: border-box;
 }
 
 .comments-header h2 {
   margin: 0;
-  color: #1e293b;
-  font-size: 22px;
-  font-weight: 700;
+  color: #1d1d1f;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  line-height: 1.2;
 }
 
 .comments-filters {
   display: flex;
   gap: 12px;
   margin: 0;
-  padding: 20px 24px;
+  padding: 24px 40px;
   background: #ffffff;
-  border: none;
-  border-bottom: 1px solid #f1f5f9;
-  border-radius: 0;
-  box-shadow: none;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .search-input {
   flex: 1;
-  padding: 12px 18px;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  padding: 10px 16px;
+  border: 1px solid #d2d2d7;
+  border-radius: 12px;
   background: #ffffff;
-  color: #1e293b;
+  color: #1d1d1f;
   font-size: 14px;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 .search-input:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #0071e3;
+  box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.1);
 }
 
 .search-btn {
-  padding: 12px 24px;
-  background: linear-gradient(135deg, #84cc16 0%, #65a30d 100%);
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  background: #0071e3;
   color: #fff;
   border: none;
-  border-radius: 10px;
+  border-radius: 12px;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(132, 204, 22, 0.3);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .search-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(132, 204, 22, 0.4);
+  background: #0077ed;
+  transform: scale(1.05);
+}
+
+.search-btn svg {
+  width: 18px;
+  height: 18px;
 }
 
 .comments-table {
@@ -192,7 +210,24 @@ onMounted(() => {
   overflow: hidden;
   flex: 1;
   overflow-y: auto;
-  box-shadow: none;
+}
+
+.comments-table::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.comments-table::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.comments-table::-webkit-scrollbar-thumb {
+  background: #d2d2d7;
+  border-radius: 5px;
+}
+
+.comments-table::-webkit-scrollbar-thumb:hover {
+  background: #86868b;
 }
 
 table {
@@ -201,34 +236,38 @@ table {
 }
 
 thead {
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: #fbfbfd;
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 th {
-  padding: 16px 18px;
+  padding: 14px 24px;
   text-align: left;
-  color: #475569;
-  font-weight: 600;
-  font-size: 13px;
+  color: #86868b;
+  font-weight: 400;
+  font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  border-bottom: 2px solid #f1f5f9;
+  letter-spacing: 0.8px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  vertical-align: middle;
 }
 
 td {
-  padding: 16px 18px;
-  color: #1e293b;
+  padding: 14px 24px;
+  color: #1d1d1f;
   font-size: 14px;
-  border-bottom: 1px solid #f8fafc;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  vertical-align: middle;
 }
 
 tbody tr {
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease;
 }
 
 tbody tr:hover {
-  background: #f8fafc;
-  transform: scale(1.001);
+  background: #fbfbfd;
 }
 
 .content-cell {
@@ -239,51 +278,69 @@ tbody tr:hover {
 }
 
 .status-select {
-  padding: 8px 14px;
-  border: 1px solid #e2e8f0;
+  padding: 6px 12px;
+  border: 1px solid #d2d2d7;
   border-radius: 8px;
   background: #ffffff;
-  color: #1e293b;
+  color: #1d1d1f;
   font-size: 13px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 .status-select:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #0071e3;
+  box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.1);
 }
 
 .actions-cell {
   display: flex;
-  gap: 10px;
+  gap: 8px;
+  align-items: center;
 }
 
-.delete-btn {
-  padding: 8px 16px;
-  background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
-  color: #fff;
+.icon-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 13px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: #86868b;
+}
+
+.icon-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  transform: scale(1.05);
+}
+
+.icon-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.delete-btn {
+  color: #ff3b30;
 }
 
 .delete-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
+  background: rgba(255, 59, 48, 0.1);
+  color: #ff3b30;
 }
 
 .loading, .empty {
   text-align: center;
-  padding: 40px;
-  color: #94a3b8;
+  padding: 80px 20px;
+  color: #86868b;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
+  background: #ffffff;
 }
 </style>
 

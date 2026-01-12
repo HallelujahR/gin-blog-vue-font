@@ -7,7 +7,12 @@
       
       <div class="posts-filters">
         <input v-model="search" type="text" placeholder="搜索文章..." class="search-input" @keyup.enter="handleSearch" />
-        <button @click="handleSearch" class="search-btn">搜索</button>
+        <button @click="handleSearch" class="search-btn" title="搜索">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.35-4.35"></path>
+          </svg>
+        </button>
       </div>
 
       <div class="posts-table">
@@ -38,8 +43,18 @@
               <td>{{ post.view_count || 0 }}</td>
               <td>{{ formatDate(post.published_at || post.created_at) }}</td>
               <td class="actions-cell">
-                <router-link :to="`/admin/posts/edit/${post.id}`" class="edit-btn">编辑</router-link>
-                <button @click="handleDelete(post.id)" class="delete-btn">删除</button>
+                <router-link :to="`/admin/posts/edit/${post.id}`" class="icon-btn edit-btn" title="编辑">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                  </svg>
+                </router-link>
+                <button @click="handleDelete(post.id)" class="icon-btn delete-btn" title="删除">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  </svg>
+                </button>
               </td>
             </tr>
           </tbody>
@@ -51,9 +66,6 @@
 
       <!-- 分页组件 -->
       <div v-if="total > 0" class="pagination">
-        <div class="pagination-info">
-          共 {{ total }} 条，第 {{ currentPage }} / {{ totalPages }} 页
-        </div>
         <div class="pagination-controls">
           <button 
             @click="goToPage(1)" 
@@ -190,11 +202,12 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* 全新明亮设计 - 整体明亮，边框浅色 */
+/* 苹果官网风格设计 */
 .admin-posts {
   height: 100%;
   display: flex;
   flex-direction: column;
+  background: #fbfbfd;
 }
 
 .posts-header {
@@ -202,79 +215,92 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   margin: 0;
-  padding: 24px;
-  padding-bottom: 20px;
-  border-bottom: 2px solid #f1f5f9;
+  padding: 0 40px;
+  height: 80px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   background: #ffffff;
+  box-sizing: border-box;
 }
 
 .posts-header h2 {
   margin: 0;
-  color: #1e293b;
-  font-size: 22px;
-  font-weight: 700;
+  color: #1d1d1f;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  line-height: 1.2;
 }
 
 .create-btn {
-  padding: 12px 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 8px 16px;
+  height: 32px;
+  background: #0071e3;
   color: #fff;
   text-decoration: none;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  transition: all 0.3s ease;
+  border-radius: 980px;
+  font-size: 13px;
+  font-weight: 400;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border: none;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .create-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+  background: #0077ed;
+  transform: translateY(-1px);
 }
 
 .posts-filters {
   display: flex;
   gap: 12px;
   margin: 0;
-  padding: 20px 24px;
+  padding: 24px 40px;
   background: #ffffff;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .search-input {
   flex: 1;
-  padding: 12px 18px;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  padding: 10px 16px;
+  border: 1px solid #d2d2d7;
+  border-radius: 12px;
   background: #ffffff;
-  color: #1e293b;
+  color: #1d1d1f;
   font-size: 14px;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 .search-input:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #0071e3;
+  box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.1);
 }
 
 .search-btn {
-  padding: 12px 24px;
-  background: linear-gradient(135deg, #84cc16 0%, #65a30d 100%);
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  background: #0071e3;
   color: #fff;
   border: none;
-  border-radius: 10px;
+  border-radius: 12px;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(132, 204, 22, 0.3);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .search-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(132, 204, 22, 0.4);
+  background: #0077ed;
+  transform: scale(1.05);
+}
+
+.search-btn svg {
+  width: 18px;
+  height: 18px;
 }
 
 .posts-table {
@@ -285,7 +311,24 @@ onMounted(() => {
   margin: 0;
   flex: 1;
   overflow-y: auto;
-  box-shadow: none;
+}
+
+.posts-table::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.posts-table::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.posts-table::-webkit-scrollbar-thumb {
+  background: #d2d2d7;
+  border-radius: 5px;
+}
+
+.posts-table::-webkit-scrollbar-thumb:hover {
+  background: #86868b;
 }
 
 table {
@@ -294,171 +337,184 @@ table {
 }
 
 thead {
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: #fbfbfd;
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 th {
-  padding: 16px 18px;
+  padding: 14px 24px;
   text-align: left;
-  color: #475569;
-  font-weight: 600;
-  font-size: 13px;
-  border-bottom: 2px solid #f1f5f9;
+  color: #86868b;
+  font-weight: 400;
+  font-size: 11px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.8px;
+  vertical-align: middle;
 }
 
 td {
-  padding: 16px 18px;
-  color: #1e293b;
+  padding: 14px 24px;
+  color: #1d1d1f;
   font-size: 14px;
-  border-bottom: 1px solid #f8fafc;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  vertical-align: middle;
 }
 
 tbody tr {
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease;
 }
 
 tbody tr:hover {
-  background: #f8fafc;
-  transform: scale(1.001);
+  background: #fbfbfd;
 }
 
 .title-cell a {
-  color: #1e293b;
+  color: #0071e3;
   text-decoration: none;
-  font-weight: 600;
-  transition: all 0.2s ease;
+  font-weight: 400;
+  transition: color 0.2s ease;
 }
 
 .title-cell a:hover {
-  color: #667eea;
+  color: #0077ed;
+  text-decoration: underline;
 }
 
 .tag {
   display: inline-block;
   padding: 6px 12px;
-  background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
-  color: #667eea;
+  background: rgba(0, 113, 227, 0.1);
+  color: #0071e3;
   border-radius: 8px;
-  font-size: 12px;
+  font-size: 13px;
   margin-right: 8px;
-  font-weight: 600;
-  border: 1px solid #e0e7ff;
+  margin-bottom: 4px;
+  font-weight: 400;
+  border: none;
 }
 
 .actions-cell {
-  display: flex;
-  gap: 10px;
-}
-
-.edit-btn {
-  padding: 8px 16px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: #fff;
-  text-decoration: none;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.25);
-}
-
-.edit-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.35);
-}
-
-.delete-btn {
-  padding: 8px 16px;
-  background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
-}
-
-.delete-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
-}
-
-.loading, .empty {
-  text-align: center;
-  padding: 40px;
-  color: #94a3b8;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-/* 分页样式 */
-.pagination {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 24px;
-  background: #ffffff;
-  border: none;
-  border-top: 1px solid #f1f5f9;
-  border-radius: 0;
-  margin: 0;
-  box-shadow: none;
-}
-
-.pagination-info {
-  color: #64748b;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.pagination-controls {
   display: flex;
   gap: 8px;
   align-items: center;
 }
 
-.page-btn {
-  padding: 10px 16px;
-  background: #ffffff;
-  color: #475569;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
+.icon-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
   cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: #86868b;
+  text-decoration: none;
+}
+
+.icon-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  transform: scale(1.05);
+}
+
+.icon-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.edit-btn {
+  color: #0071e3;
+}
+
+.edit-btn:hover {
+  background: rgba(0, 113, 227, 0.1);
+  color: #0071e3;
+}
+
+.delete-btn {
+  color: #ff3b30;
+}
+
+.delete-btn:hover {
+  background: rgba(255, 59, 48, 0.1);
+  color: #ff3b30;
+}
+
+.loading, .empty {
+  text-align: center;
+  padding: 80px 20px;
+  color: #86868b;
   font-size: 14px;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  min-width: 44px;
+  font-weight: 400;
+  background: #ffffff;
+}
+
+/* 分页样式 */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 12px 40px;
+  background: #ffffff;
+  border: none;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 0;
+  margin: 0;
+}
+
+.pagination-controls {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.page-btn {
+  padding: 6px 12px;
+  height: 28px;
+  background: #ffffff;
+  color: #1d1d1f;
+  border: 1px solid #d2d2d7;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 400;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
 }
 
 .page-btn:hover:not(:disabled) {
-  background: #f8fafc;
-  border-color: #667eea;
-  color: #667eea;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.2);
+  background: #fbfbfd;
+  border-color: #0071e3;
+  color: #0071e3;
 }
 
 .page-btn:disabled {
-  opacity: 0.4;
+  opacity: 0.3;
   cursor: not-allowed;
-  background: #f8fafc;
+  background: #fbfbfd;
 }
 
 .page-btn.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #0071e3;
   color: #ffffff;
   border-color: transparent;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
 .page-ellipsis {
-  padding: 8px 4px;
-  color: #94a3b8;
-  font-size: 14px;
+  padding: 6px 4px;
+  color: #86868b;
+  font-size: 13px;
+  line-height: 28px;
 }
 </style>
 

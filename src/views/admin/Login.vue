@@ -84,7 +84,7 @@ const handleLogin = async () => {
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
+  background: #f5f5f7;
   padding: 20px;
 }
 
@@ -92,22 +92,18 @@ const handleLogin = async () => {
   width: 100%;
   max-width: 420px;
   background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 16px;
+  border: none;
+  border-radius: 12px;
   padding: 48px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .login-card h2 {
   margin: 0 0 36px;
   text-align: center;
-  color: #1e293b;
+  color: #1d1d1f;
   font-size: 28px;
-  font-weight: 700;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-weight: 600;
 }
 
 .form-group {
@@ -136,17 +132,17 @@ const handleLogin = async () => {
 
 .form-group input:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #007AFF;
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
 }
 
 .error-message {
   margin-bottom: 16px;
   padding: 14px 18px;
-  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-  border: 1px solid #fca5a5;
-  border-radius: 10px;
-  color: #dc2626;
+  background: #FFEBEE;
+  border: none;
+  border-radius: 8px;
+  color: #D32F2F;
   font-size: 14px;
   text-align: center;
   font-weight: 500;
@@ -154,22 +150,24 @@ const handleLogin = async () => {
 
 .login-btn {
   width: 100%;
-  padding: 14px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 12px;
+  height: 44px;
+  background: #007AFF;
   color: #fff;
   border: none;
-  border-radius: 10px;
+  border-radius: 8px;
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   margin-top: 8px;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .login-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+  background: #0051D5;
 }
 
 .login-btn:disabled {
@@ -186,15 +184,15 @@ const handleLogin = async () => {
 }
 
 .login-footer a {
-  color: #667eea;
+  color: #007AFF;
   text-decoration: none;
   font-size: 14px;
-  font-weight: 600;
-  transition: all 0.3s ease;
+  font-weight: 500;
+  transition: all 0.2s ease;
 }
 
 .login-footer a:hover {
-  color: #764ba2;
+  color: #0051D5;
 }
 </style>
 
