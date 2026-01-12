@@ -93,8 +93,8 @@ function toggleTag(slug) {
 </script>
 <style scoped>
 .sidebar { display: flex; flex-direction: column; gap: 16px; width: 100%; }
-.box { background: var(--card); border: none; border-radius: 12px; padding:14px 16px; box-shadow: 0 6px 18px rgba(17,24,39,.04); transition: box-shadow .2s ease; }
-.box:hover { box-shadow: 0 10px 24px rgba(17,24,39,.08); }
+.box { background: var(--card); border: none; border-radius: 12px; padding:14px 16px; box-shadow: 0 10px 30px rgba(107, 112, 92, 0.1); transition: box-shadow .2s ease; }
+.box:hover { box-shadow: 0 16px 40px rgba(107, 112, 92, 0.15); }
 h3 { margin: 0 0 10px; font-size:16px; color: var(--text); }
 .list { list-style:none; padding:0; margin:0; }
 .list-item { padding:8px 0; border-bottom: 1px dashed #eef2f7; }
@@ -102,15 +102,15 @@ h3 { margin: 0 0 10px; font-size:16px; color: var(--text); }
 .list-item a:hover { color: #4f46e5; opacity: 1; }
 .list-item:last-child { border: none; }
 .chips { display:flex; flex-wrap:wrap; gap:8px; }
-.chip { background: var(--chip); border:1px solid var(--chip-border); color: var(--text); padding:6px 12px; border-radius:16px; font-size:12px; transition: transform .18s ease, box-shadow .18s ease, background .18s ease, color .18s ease; }
-.chip:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(79,70,229,.15); }
-.chip.active { background: #e0e7ff; border-color: #c7d2fe; color: #3730a3; font-weight: 700; }
+.chip { background: rgba(163, 177, 138, 0.2); border: none; color: #6B705C; padding:6px 12px; border-radius:16px; font-size:12px; transition: transform .18s ease, box-shadow .18s ease, background .18s ease, color .18s ease; }
+.chip:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(163, 177, 138, 0.25); background: rgba(163, 177, 138, 0.3); }
+.chip.active { background: #A3B18A; border-color: #A3B18A; color: #FFFFFF; font-weight: 700; }
 .toggle-btn {
   margin-top: 12px;
   width: 100%;
-  border: 1px dashed #d1d5db;
-  background: rgba(148, 163, 184, 0.08);
-  color: #475569;
+  border: 1px dashed rgba(107, 112, 92, 0.4);
+  background: rgba(163, 177, 138, 0.1);
+  color: #6B705C;
   padding: 6px 0;
   border-radius: 10px;
   font-size: 12px;
@@ -118,8 +118,8 @@ h3 { margin: 0 0 10px; font-size:16px; color: var(--text); }
   transition: all 0.2s ease;
 }
 .toggle-btn:hover {
-  background: rgba(79, 70, 229, 0.08);
-  color: #4338ca;
-  border-color: #a5b4fc;
+  background: rgba(163, 177, 138, 0.2);
+  color: #3F4238;
+  border-color: #A3B18A;
 }
 </style>

@@ -239,23 +239,23 @@ async function toggleLike() {
 }
 </script>
 <style scoped>
-.detail-card { background: var(--card); color: var(--text); border: none; border-radius:14px; box-shadow:0 6px 18px rgba(17,24,39,.06); padding:32px; margin-bottom:26px; }
+.detail-card { background: var(--card); color: var(--text); border: none; border-radius:14px; box-shadow:0 10px 30px rgba(107, 112, 92, 0.1); padding:32px; margin-bottom:26px; }
 .detail-card h1 { font-size:2.2rem; color: var(--text); margin:12px 0 12px 2px; }
 .detail-cover { width:100%; max-height:330px; object-fit:cover; margin-bottom:18px; border-radius:11px; }
 .detail-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
-.blog-card-tag { background: var(--chip); border:1px solid var(--chip-border); color: var(--text); font-size:13px; padding:3px 12px; border-radius:8px; margin-right:10px; font-weight:600; }
-.blog-card-date { font-size:15px; color:#8192a8; }
+.blog-card-tag { background: rgba(163, 177, 138, 0.2); border: none; color: #6B705C; font-size:13px; padding:3px 12px; border-radius:8px; margin-right:10px; font-weight:600; }
+.blog-card-date { font-size:15px; color:#6B705C; }
 .detail-meta-tags { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 16px 0 24px 2px; }
-.detail-meta-chip { display: inline-block; background: #f3f6ff; border: 1px solid #e4ecff; color: #4f46e5; font-size: 12px; padding: 4px 10px; border-radius: 999px; font-weight: 500; text-decoration: none; transition: all 0.2s ease; }
-.detail-meta-chip:hover { background: #e0e7ff; border-color: #c7d2fe; color: #3730a3; transform: translateY(-1px); }
-.detail-markdown { color: #334155; font-size:17px; line-height:1.95; background:#ffffff; border-radius:10px; padding:22px 24px; border:1px solid #eef2f7; margin-bottom: 20px; }
+.detail-meta-chip { display: inline-block; background: rgba(163, 177, 138, 0.2); border: none; color: #6B705C; font-size: 12px; padding: 4px 10px; border-radius: 999px; font-weight: 500; text-decoration: none; transition: all 0.2s ease; }
+.detail-meta-chip:hover { background: rgba(163, 177, 138, 0.3); color: #3F4238; transform: translateY(-1px); }
+.detail-markdown { color: #3F4238; font-size:17px; line-height:1.95; background:#ffffff; border-radius:10px; padding:22px 24px; border:1px solid rgba(107, 112, 92, 0.15); margin-bottom: 20px; }
 .detail-stats { 
   display: flex; 
   align-items: center; 
   gap: 32px; 
   margin-top: 32px; 
   padding-top: 24px; 
-  border-top: 1px solid #eef2f7; 
+  border-top: 1px solid rgba(107, 112, 92, 0.15); 
 }
 .stat-btn { 
   display: inline-flex; 
@@ -267,7 +267,7 @@ async function toggleLike() {
   border: none; 
   background: transparent; 
   border-radius: 0; 
-  color: #64748b; 
+  color: #6B705C; 
   font-size: 14px; 
   cursor: pointer; 
   transition: color 0.2s ease; 
@@ -277,14 +277,14 @@ async function toggleLike() {
   vertical-align: top; 
 }
 .stat-btn:hover { 
-  color: #475569; 
+  color: #3F4238; 
 }
 .stat-btn.stat-view { 
   cursor: default; 
-  color: #94a3b8; 
+  color: #8FA075; 
 }
 .stat-btn.stat-view:hover { 
-  color: #94a3b8; 
+  color: #8FA075; 
 }
 .stat-btn.stat-like.liked { 
   color: #dc2626; 
@@ -318,10 +318,11 @@ async function toggleLike() {
   border-radius:12px; 
   padding:22px; 
   color: var(--text); 
-  border:1px solid #eef2f7; 
+  border:1px solid rgba(107, 112, 92, 0.15); 
+  box-shadow:0 10px 30px rgba(107, 112, 92, 0.1); 
 }
 .detail-comment-box h2 { 
-  color:#1e293b; 
+  color:#3F4238; 
   font-size: 20px; 
   font-weight: 600; 
   margin: 0 0 20px 0; 
@@ -338,18 +339,18 @@ async function toggleLike() {
   flex: 1; 
   padding: 10px 12px; 
   border-radius: 8px; 
-  border: 1px solid #e6eef6; 
+  border: 1px solid rgba(107, 112, 92, 0.2); 
   background: #fff; 
-  color: #1e293b; 
+  color: #3F4238; 
   font-size: 14px; 
   transition: border-color 0.2s ease; 
 }
 .comment-input:focus { 
   outline: none; 
-  border-color: #cbd5e1; 
+  border-color: #A3B18A; 
 }
 .comment-input::placeholder { 
-  color: #94a3b8; 
+  color: #8FA075; 
 }
 .comment-textarea { 
   width: 100%; 
@@ -357,9 +358,9 @@ async function toggleLike() {
   padding: 10px 12px; 
   margin-bottom: 12px; 
   border-radius: 8px; 
-  border: 1px solid #e6eef6; 
+  border: 1px solid rgba(107, 112, 92, 0.2); 
   background: #fff; 
-  color: #1e293b; 
+  color: #3F4238; 
   font-size: 14px; 
   font-family: inherit; 
   resize: vertical; 
@@ -367,16 +368,16 @@ async function toggleLike() {
 }
 .comment-textarea:focus { 
   outline: none; 
-  border-color: #cbd5e1; 
+  border-color: #A3B18A; 
 }
 .comment-textarea::placeholder { 
-  color: #94a3b8; 
+  color: #8FA075; 
 }
 .comment-submit-btn { 
   padding: 10px 24px; 
   border-radius: 8px; 
   border: none; 
-  background: #4f46e5; 
+  background: #A3B18A; 
   color: #fff; 
   font-size: 14px; 
   font-weight: 500; 
@@ -384,9 +385,9 @@ async function toggleLike() {
   transition: background-color 0.2s ease; 
 }
 .comment-submit-btn:hover { 
-  background: #4338ca; 
+  background: #8FA075; 
 }
 .comment-submit-btn:active { 
-  background: #3730a3; 
+  background: #6B705C; 
 }
 </style>

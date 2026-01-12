@@ -182,7 +182,7 @@ onUnmounted(() => {
   background: var(--card);
   color: var(--text);
   border-radius: 16px;
-  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.12);
+  box-shadow: 0 10px 30px rgba(107, 112, 92, 0.1);
   padding: 20px 22px 24px;
   width: 100%;
   box-sizing: border-box;
@@ -209,7 +209,7 @@ onUnmounted(() => {
   margin: 16px 0 12px;
 }
 .stat-card {
-  background: rgba(148, 163, 184, 0.08);
+  background: rgba(163, 177, 138, 0.1);
   border-radius: 12px;
   padding: 12px 14px;
   display: flex;
@@ -248,12 +248,12 @@ onUnmounted(() => {
   gap: 12px;
   padding: 10px 12px;
   border-radius: 12px;
-  border: 1px solid rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(163, 177, 138, 0.2);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 .top-post:hover {
   transform: translateY(-1px);
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 8px 18px rgba(107, 112, 92, 0.12);
 }
 .title {
   color: var(--text);
@@ -263,7 +263,7 @@ onUnmounted(() => {
   transition: color 0.15s ease;
 }
 .title:hover {
-  color: #6366f1;
+  color: #A3B18A;
 }
 .regions {
   display: flex;
@@ -287,7 +287,7 @@ onUnmounted(() => {
   left: 0;
   top: 0;
   bottom: 0;
-  background: linear-gradient(90deg, #6366f1, #8b5cf6);
+  background: linear-gradient(90deg, #A3B18A, #8FA075);
 }
 .region-info {
   display: flex;
@@ -299,9 +299,9 @@ onUnmounted(() => {
 .toggle-button {
   margin-top: 12px;
   width: 100%;
-  border: 1px dashed rgba(148, 163, 184, 0.8);
-  background: rgba(148, 163, 184, 0.08);
-  color: #475569;
+  border: 1px dashed rgba(107, 112, 92, 0.4);
+  background: rgba(163, 177, 138, 0.1);
+  color: #6B705C;
   padding: 8px 0;
   border-radius: 10px;
   font-size: 12px;
@@ -309,9 +309,9 @@ onUnmounted(() => {
   transition: all 0.2s ease;
 }
 .toggle-button:hover {
-  background: rgba(79, 70, 229, 0.08);
-  color: #4338ca;
-  border-color: #a5b4fc;
+  background: rgba(163, 177, 138, 0.2);
+  color: #3F4238;
+  border-color: #A3B18A;
 }
 .name {
   font-weight: 600;

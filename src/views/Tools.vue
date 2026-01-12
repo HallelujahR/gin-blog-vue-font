@@ -45,8 +45,8 @@ const go = (name) => {
 .page-header h1 { margin: 0 0 6px; font-size: 26px; font-weight: 700; color: var(--text); }
 .lead { margin: 0; color: var(--muted); font-size: 14px; }
 .tool-list { display: grid; gap: 20px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
-.tool-card { position: relative; display: flex; flex-direction: column; gap: 18px; padding: 22px; border-radius: 16px; background: var(--card); box-shadow: 0 10px 28px rgba(15,23,42,0.08); color: var(--text); cursor: pointer; transition: transform 0.18s ease, box-shadow 0.18s ease; }
-.tool-card:hover { transform: translateY(-2px); box-shadow: 0 18px 34px rgba(15,23,42,0.12); }
+.tool-card { position: relative; display: flex; flex-direction: column; gap: 18px; padding: 22px; border-radius: 16px; background: var(--card); box-shadow: 0 10px 30px rgba(107, 112, 92, 0.1); color: var(--text); cursor: pointer; transition: transform 0.18s ease, box-shadow 0.18s ease; }
+.tool-card:hover { transform: translateY(-2px); box-shadow: 0 16px 40px rgba(107, 112, 92, 0.15); }
 .tool-logo { width: 72px; height: 72px; border-radius: 16px; }
 .tool-logo.gradient {
   display: flex;
@@ -61,8 +61,8 @@ const go = (name) => {
 }
 .tool-info h2 { margin: 0; font-size: 18px; font-weight: 600; color: var(--text); }
 .tool-info p { margin: 6px 0 0; font-size: 14px; color: var(--muted); line-height: 1.6; }
-.enter-btn { align-self: flex-start; padding: 0 16px; height: 32px; border-radius: 999px; border: none; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease; }
-.tool-card:hover .enter-btn { transform: translateX(2px); box-shadow: 0 10px 20px rgba(99,102,241,0.28); }
+.enter-btn { align-self: flex-start; padding: 0 16px; height: 32px; border-radius: 999px; border: none; background: linear-gradient(135deg, #A3B18A, #8FA075); color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease; }
+.tool-card:hover .enter-btn { transform: translateX(2px); box-shadow: 0 10px 20px rgba(163, 177, 138, 0.35); }
 .tool-full { display: flex; flex-direction: column; gap: 16px; }
 .analytics { order: 0; }
 .section-title { margin: 12px 0 -4px; font-size: 18px; font-weight: 600; color: var(--text); }

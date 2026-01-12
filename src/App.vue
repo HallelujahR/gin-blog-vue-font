@@ -4,9 +4,6 @@
     <nav v-if="!isAdminRoute" class="site-nav">
       <div class="site-nav-inner">
         <div class="site-links">
-          <router-link to="/" class="brand">
-            <img src="/logo.png" alt="RvierLog" class="brand-logo" />
-          </router-link>
           <router-link to="/">博客首页</router-link>
           <router-link to="/tools">工具栏</router-link>
           <router-link to="/about">关于我</router-link>
@@ -89,25 +86,17 @@ function goSearch() {
   display: flex;
   flex-direction: column;
 }
-.site-nav { position: fixed; top: 0; left: 0; right: 0; height: var(--nav-height); background: var(--card); border-bottom: 1px solid var(--border); z-index: 1000; }
+.site-nav { position: fixed; top: 0; left: 0; right: 0; height: var(--nav-height); background: rgba(250, 249, 246, 0.82); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid rgba(107, 112, 92, 0.12); z-index: 1000; box-shadow: 0 4px 20px rgba(107, 112, 92, 0.05); }
 .site-nav-inner { max-width: 960px; margin: 0 auto; height: 100%; display: flex; align-items: center; justify-content: flex-start; padding: 0 20px; }
 .site-links { display: flex; align-items: center; gap: 4px; flex-wrap: nowrap; white-space: nowrap; writing-mode: horizontal-tb; }
-.brand {
-  display: inline-flex;
-  align-items: center;
-  padding: 0 12px 0 4px;
-}
-.brand-logo {
-  width: 60px;
-  height: 60px;
-  border-radius: 8px;
-  object-fit: cover;
-}
-.site-links a { display: inline-flex; align-items: center; height: var(--nav-height); padding: 0 10px; color: var(--text); text-decoration: none; font-weight: 500; position: relative; transition: text-shadow 0.2s ease; background: transparent !important; }
-.site-links a:hover { text-shadow: 0 0 4px rgba(30,41,59,0.15); background: transparent !important; }
-.site-links a.router-link-active { text-shadow: 0 0 6px rgba(30,41,59,0.25); background: transparent !important; }
-.nav-search { margin-left: 16px; height: 26px; padding: 0 10px; font-size: 14px; border: 1px solid var(--border); background: #fff; color: var(--text); border-radius: 6px; }
-.nav-search:focus { outline: none; border-color: #cbd5e1; }
+.site-links a { display: inline-flex; align-items: center; height: var(--nav-height); padding: 0 12px; color: #4A4A4A; text-decoration: none; font-weight: 500; position: relative; transition: color 0.2s ease; background: transparent !important; }
+.site-links a::after { content: ""; position: absolute; left: 12px; right: 12px; bottom: 6px; height: 2px; border-radius: 999px; background: #A3B18A; transform: scaleX(0); transform-origin: center; transition: transform 0.2s ease; }
+.site-links a:hover { color: #A3B18A; }
+.site-links a:hover::after { transform: scaleX(1); }
+.site-links a.router-link-active { color: #A3B18A; }
+.site-links a.router-link-active::after { transform: scaleX(1); }
+.nav-search { margin-left: 18px; height: 30px; padding: 0 14px; font-size: 14px; border: 1px solid rgba(107, 112, 92, 0.18); background: #F0EFEA; color: var(--text); border-radius: 20px; transition: border-color 0.2s ease, box-shadow 0.2s ease, padding 0.2s ease; }
+.nav-search:focus { outline: none; border-color: #A3B18A; box-shadow: 0 0 0 2px rgba(163, 177, 138, 0.25); padding: 0 15px; }
 .site-content {
   flex: 1;
 }
@@ -116,7 +105,7 @@ function goSearch() {
 }
 .site-footer {
   padding: 12px 0 18px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid rgba(107, 112, 92, 0.15);
   font-size: 12px;
   color: var(--muted);
 }

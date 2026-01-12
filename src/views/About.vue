@@ -104,7 +104,7 @@ onMounted(async () => {
 }
 
 .page-content :deep(a) {
-  color: #4f46e5;
+  color: #A3B18A;
   text-decoration: none;
 }
 
@@ -126,7 +126,7 @@ onMounted(async () => {
   background: var(--card);
   border-radius: 20px;
   padding: 28px;
-  box-shadow: 0 18px 38px rgba(15, 23, 42, 0.18);
+  box-shadow: 0 10px 30px rgba(107, 112, 92, 0.1);
   margin: 48px 0 28px;
   display: flex;
   flex-direction: column;
@@ -178,8 +178,8 @@ onMounted(async () => {
 .experience-card {
   border-radius: 14px;
   padding: 16px 18px;
-  background: rgba(148, 163, 184, 0.08);
-  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(163, 177, 138, 0.1);
+  border: 1px solid rgba(163, 177, 138, 0.2);
 }
 
 .company {

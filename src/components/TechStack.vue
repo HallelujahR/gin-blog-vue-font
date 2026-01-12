@@ -239,7 +239,7 @@ const contacts = [
   background: var(--card);
   border-radius: 16px;
   padding: 24px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 10px 30px rgba(107, 112, 92, 0.1);
 }
 
 .category-title {
@@ -265,7 +265,7 @@ const contacts = [
 }
 
 .tech-item:hover {
-  background-color: rgba(99, 102, 241, 0.05);
+  background-color: rgba(163, 177, 138, 0.1);
   transform: translateY(-2px);
 }
 
@@ -322,7 +322,7 @@ const contacts = [
   background: var(--card);
   border-radius: 16px;
   padding: 24px;
-  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 10px 30px rgba(107, 112, 92, 0.1);
 }
 
 .contact-title {
@@ -344,15 +344,15 @@ const contacts = [
   gap: 12px;
   padding: 14px 16px;
   border-radius: 14px;
-  border: 1px solid rgba(148, 163, 184, 0.25);
-  background: rgba(148, 163, 184, 0.05);
+  border: 1px solid rgba(163, 177, 138, 0.2);
+  background: rgba(163, 177, 138, 0.08);
 }
 
 .contact-icon {
   width: 40px;
   height: 40px;
   border-radius: 12px;
-  background: rgba(99, 102, 241, 0.1);
+  background: rgba(163, 177, 138, 0.15);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -381,7 +381,7 @@ const contacts = [
 }
 
 .contact-info a:hover {
-  color: #6366f1;
+  color: #A3B18A;
 }
 
 @media (max-width: 768px) {

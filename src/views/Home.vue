@@ -39,6 +39,25 @@
     </div>
       <div class="side">
         <div class="side-content">
+          <div class="author-card">
+            <div class="author-avatar">
+              <img :src="headerImg" alt="Author" />
+            </div>
+            <div class="author-name">RvierLog</div>
+            <div class="author-role">Developer / Designer / Backend Engineer</div>
+            <p class="author-bio">
+              Hi，我是 Ruiwen，来自延边。相信代码让人理性，生活让人温柔。
+            </p>
+            <div class="author-tags">
+              <span class="author-tag">摄影</span>
+              <span class="author-tag">旅游</span>
+              <span class="author-tag">PlayStation</span>
+              <span class="author-tag">Steam</span>
+              <span class="author-tag">Coding</span>
+              <span class="author-tag">电影</span>
+            </div>
+            <router-link to="/about" class="author-link">更多关于我</router-link>
+          </div>
           <StatsOverview />
           <Sidebar />
         </div>
@@ -52,6 +71,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { apiPosts, apiMeta } from '../api';
 import Sidebar from '../components/Sidebar.vue';
 import StatsOverview from '../components/StatsOverview.vue';
+import headerImg from '../assets/header.png';
 
 const route = useRoute();
 const router = useRouter();
@@ -171,42 +191,52 @@ function formatDate(dateStr) {
 .main { min-width: 0; }
 .side { min-width: 0; }
 .side-content { position: sticky; top: calc(var(--nav-height) + 12px); display: flex; flex-direction: column; gap: 16px; }
+.author-card { background: #A3B18A; border-radius: 16px; padding: 24px 20px; display: flex; flex-direction: column; align-items: center; box-shadow: 0 10px 30px rgba(107, 112, 92, 0.15); gap: 8px; }
+.author-avatar { width: 80px; height: 80px; border-radius: 50%; overflow: hidden; margin-bottom: 12px; border: 3px solid rgba(255, 255, 255, 0.3); }
+.author-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.author-name { color: #FFFFFF; font-size: 18px; font-weight: 600; }
+.author-role { color: rgba(255,255,255,0.9); font-size: 13px; font-weight: 500; text-align: center; }
+.author-bio { margin: 0; color: rgba(255,255,255,0.92); font-size: 13px; line-height: 1.6; text-align: center; }
+.author-tags { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 2px; }
+.author-tag { background: rgba(255,255,255,0.18); color: #fff; padding: 4px 8px; border-radius: 999px; font-size: 12px; }
+.author-link { margin-top: 4px; color: #3F4238; background: #F6F8F1; border-radius: 999px; padding: 7px 14px; font-weight: 600; font-size: 13px; text-decoration: none; transition: transform 0.15s ease, box-shadow 0.15s ease; }
+.author-link:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(79, 70, 229, 0.12); }
 .filter-panel { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:12px; margin-bottom:12px; }
 .filter-row { display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px; }
 .filter-title { width:52px; color:var(--muted); font-size:13px; }
 .chip { background:var(--chip); border:1px solid var(--chip-border); color:var(--text); padding:6px 10px; border-radius:16px; font-size:12px; cursor:pointer; transition:transform .18s ease, box-shadow .18s ease; }
 .chip:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(79,70,229,.15); }
-.chip.active { background:#e0e7ff; border-color:#c7d2fe; color:#3730a3; font-weight:700; }
+.chip.active { background:#A3B18A; border-color:#A3B18A; color:#FFFFFF; font-weight:700; }
 .fade-enter-active,.fade-leave-active { transition: opacity .15s; }
 .fade-enter-from,.fade-leave-to { opacity: 0; }
 .list-masonry { display:flex; flex-direction:column; }
 .loading { text-align:center; color:var(--muted); margin: 8px 0 16px; }
-.blog-card { background:var(--card); color:var(--text); border:none; border-radius:18px; display:flex; margin-bottom:22px; box-shadow:0 6px 18px rgba(17,24,39,.06); overflow:hidden; transition:box-shadow .2s, transform .2s; }
+.blog-card { background:var(--card); color:var(--text); border:1px solid rgba(107, 112, 92, 0.12); border-radius:18px; display:flex; margin-bottom:26px; box-shadow:0 10px 30px rgba(107, 112, 92, 0.1); overflow:hidden; transition:box-shadow .2s, transform .2s; }
 .blog-card.no-media { flex-direction: column; }
-.blog-card:hover { box-shadow:0 16px 32px rgba(17,24,39,.12); transform: translateY(-2px); }
-.blog-card-media { width:310px; height:180px; flex-shrink:0; border-radius:14px; overflow:hidden; margin:16px 0 16px 16px; background:#f1f5f9; position: relative; display:flex; align-items:center; justify-content:center; }
+.blog-card:hover { box-shadow:0 16px 40px rgba(107, 112, 92, 0.15); transform: translateY(-2px); }
+.blog-card-media { width:310px; aspect-ratio: 16 / 9; flex-shrink:0; border-radius:14px; overflow:hidden; margin:18px 0 18px 18px; background:#f1f5f9; position: relative; display:flex; align-items:center; justify-content:center; }
 .blog-card-img { width:100%; height:100%; object-fit:cover; transition: transform 0.5s ease; border-radius: inherit; }
 .blog-card:hover .blog-card-img { transform: scale(1.02); }
-.blog-card-main { flex:1; padding:28px 22px 22px 28px; display:flex; flex-direction:column; justify-content:center; }
-.blog-card-meta { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+.blog-card-main { flex:1; padding:32px 26px 26px 32px; display:flex; flex-direction:column; justify-content:center; }
+.blog-card-meta { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
 .blog-card-meta-left { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
 .blog-meta-chip {
-  background: rgba(99, 102, 241, 0.08);
-  border: 1px solid rgba(99, 102, 241, 0.18);
-  color: #475569;
+  background: rgba(163, 177, 138, 0.2);
+  border: none;
+  color: #6B705C;
   font-size: 12px;
   padding: 4px 10px;
   border-radius: 999px;
   font-weight: 500;
 }
 .blog-card-date { font-size:14px; color:var(--muted); }
-.blog-card-title { color:var(--text); font-size:22px; font-weight:700; margin:6px 0 10px 0; display:block; }
-.blog-card-desc { color:#b8c6e2; font-size:15px; line-height:1.72; margin-bottom: 12px; }
-.blog-card-stats { display:flex; align-items:center; gap:24px; padding-top: 12px; border-top: 1px solid rgba(226, 232, 240, 0.5); }
-.stat-btn { display:inline-flex; align-items:center; justify-content:flex-start; gap:6px; padding:0; margin:0; border:none; background:transparent; color:#64748b; font-size:14px; line-height:20px; height:20px; font-weight:400; transition:color 0.2s ease; }
-.stat-btn.stat-view { color:#94a3b8; }
-.stat-btn:hover { color:#475569; }
-.stat-btn.stat-view:hover { color:#94a3b8; }
+.blog-card-title { color:var(--text); font-size:22px; font-weight:600; margin:8px 0 12px 0; display:block; line-height: 1.35; }
+.blog-card-desc { color:#6B705C; font-size:15px; line-height:1.72; margin-bottom: 14px; }
+.blog-card-stats { display:flex; align-items:center; gap:24px; padding-top: 12px; border-top: 1px solid rgba(107, 112, 92, 0.15); }
+.stat-btn { display:inline-flex; align-items:center; justify-content:flex-start; gap:6px; padding:0; margin:0; border:none; background:transparent; color:#6B705C; font-size:14px; line-height:20px; height:20px; font-weight:400; transition:color 0.2s ease; }
+.stat-btn.stat-view { color:#8FA075; }
+.stat-btn:hover { color:#3F4238; }
+.stat-btn.stat-view:hover { color:#6B705C; }
 @media (max-width: 900px) {
   .layout { display:flex; flex-direction: column; gap: 16px; }
   .side { order: -1; }
@@ -220,12 +250,13 @@ function formatDate(dateStr) {
   }
   .blog-card-media {
     width: calc(100% - 32px);
-    height: 200px;
-    margin: 16px;
+    aspect-ratio: 16 / 9;
+    height: auto;
+    margin: 18px 16px 12px;
     border-radius: 14px;
   }
   .blog-card-main {
-    padding: 18px 16px 20px;
+    padding: 22px 18px 22px;
   }
   .blog-card-title {
     font-size: 18px;
