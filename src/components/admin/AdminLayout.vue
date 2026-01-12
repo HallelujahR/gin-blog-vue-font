@@ -33,8 +33,11 @@
     </aside>
     <main class="admin-main">
       <header class="admin-header">
-        <h1>{{ currentTitle }}</h1>
         <div class="header-right">
+          <div class="login-status">
+            <span class="status-indicator" :class="{ 'logged-in': user }"></span>
+            <span class="status-text">{{ user ? '已登录' : '未登录' }}</span>
+          </div>
           <div class="user-status">
             <span class="user-name">{{ user?.username || 'Admin' }}</span>
             <span class="user-role">{{ user?.role === 'admin' ? '管理员' : user?.role || 'Admin' }}</span>
@@ -52,15 +55,13 @@
 
 <script setup>
 import { computed, onMounted, onUnmounted } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { useRouter } from 'vue-router';
 import { adminAuth } from '../../utils/auth.js';
 import { apiAdminAuth } from '../../api/admin.js';
 
-const route = useRoute();
 const router = useRouter();
 
 const user = computed(() => adminAuth.getUser());
-const currentTitle = computed(() => route.meta.title || '后台管理');
 
 const handleLogout = async () => {
   apiAdminAuth.logout();
@@ -210,28 +211,49 @@ onUnmounted(() => {
 }
 
 .admin-header {
-  padding: 0;
+  padding: 0 40px;
   background: #ffffff;
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  min-height: 0;
-  display: none;
-}
-
-.admin-header h1 {
-  margin: 0;
-  font-size: 20px;
-  color: #1d1d1f;
-  font-weight: 600;
-  letter-spacing: -0.3px;
+  justify-content: flex-end;
+  min-height: 80px;
+  height: 80px;
+  flex-shrink: 0;
+  box-sizing: border-box;
 }
 
 .header-right {
   display: flex;
   align-items: center;
   gap: 16px;
+}
+
+.login-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-right: 16px;
+  border-right: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #86868b;
+  display: inline-block;
+  transition: background-color 0.2s ease;
+}
+
+.status-indicator.logged-in {
+  background: #30d158;
+}
+
+.status-text {
+  font-size: 12px;
+  color: #86868b;
+  font-weight: 400;
 }
 
 .user-status {

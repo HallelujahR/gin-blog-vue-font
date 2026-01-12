@@ -2,7 +2,7 @@
   <div class="stats-wrapper">
     <header class="stats-header">
       <div>
-        <h3>近30日访问概览</h3>
+        <h3>访问概览</h3>
         <p v-if="stats" class="generated">更新于 {{ formattedTime }}</p>
       </div>
     </header>
