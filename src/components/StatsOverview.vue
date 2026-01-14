@@ -2,8 +2,7 @@
   <div class="stats-wrapper">
     <header class="stats-header">
       <div>
-        <h3>访问概览</h3>
-        <p v-if="stats" class="generated">更新于 {{ formattedTime }}</p>
+        <h3>热门文章</h3>
       </div>
     </header>
 
@@ -12,19 +11,7 @@
     </div>
 
     <template v-else>
-      <div class="stats-grid" v-if="stats">
-        <div class="stat-card">
-          <span class="label">访问次数</span>
-          <span class="value">{{ stats.totalVisits }}</span>
-        </div>
-        <div class="stat-card">
-          <span class="label">独立访客</span>
-          <span class="value">{{ stats.uniqueVisitors }}</span>
-        </div>
-      </div>
-
       <section class="sub-section" v-if="stats">
-        <h4>热门文章</h4>
         <ul class="top-posts">
           <li
             v-for="(post, index) in topPosts"
@@ -36,30 +23,6 @@
           </li>
           <li v-if="topPosts.length === 0" class="empty">暂无数据</li>
         </ul>
-      </section>
-
-      <section class="sub-section" v-if="stats">
-        <h4>地区分布</h4>
-        <div class="regions">
-          <div v-for="region in displayedRegions" :key="region.name" class="region-row">
-            <div class="region-bar">
-              <div class="fill" :style="{ width: region.percentage + '%' }"></div>
-            </div>
-            <div class="region-info">
-              <span class="name">{{ region.display }}</span>
-              <span class="meta">{{ region.percentage }}%</span>
-            </div>
-          </div>
-          <p v-if="regions.length === 0" class="empty">暂无地区数据</p>
-        </div>
-        <button
-          v-if="regions.length > 3"
-          class="toggle-button"
-          type="button"
-          @click="showAllRegions = !showAllRegions"
-        >
-          {{ showAllRegions ? '收起' : `展开剩余 ${regions.length - 3} 个地区` }}
-        </button>
       </section>
     </template>
 
@@ -75,12 +38,6 @@ import { apiStats } from '../api';
 const loading = ref(false);
 const stats = ref(null);
 const error = ref('');
-
-const formattedTime = computed(() => {
-  if (!stats.value?.generatedAt) return '';
-  const d = new Date(stats.value.generatedAt);
-  return d.toLocaleString();
-});
 
 const topPostColors = ['#EEF2FF', '#DCFCE7', '#FFE4E6', '#E0F2FE', '#F5F3FF'];
 
@@ -98,21 +55,6 @@ const topPosts = computed(() => {
   });
 });
 
-const showAllRegions = ref(false);
-
-const regions = computed(() => {
-  if (!stats.value) return [];
-  return stats.value.regionDistribution.map((r) => ({
-    ...r,
-    display: r.name === 'UNKNOWN' ? '未知地区' : r.name,
-  }));
-});
-
-const displayedRegions = computed(() => {
-  if (showAllRegions.value) return regions.value;
-  return regions.value.slice(0, 3);
-});
-
 let retryTimer = null;
 
 async function refresh() {
@@ -127,12 +69,7 @@ async function refresh() {
     const res = await apiStats.summary();
     const data = res.data || {};
     stats.value = {
-      totalVisits: data.total_visits || 0,
-      uniqueVisitors: data.unique_visitors || 0,
-      averageDurationMs: data.avg_duration_ms || 0,
       topPosts: Array.isArray(data.top_posts) ? data.top_posts : [],
-      regionDistribution: Array.isArray(data.region_distribution) ? data.region_distribution : [],
-      generatedAt: data.generated_at,
     };
   } catch (err) {
     error.value = err?.message || '请求失败';
@@ -197,42 +134,8 @@ onUnmounted(() => {
   margin: 0;
   font-size: 18px;
 }
-.generated {
-  margin: 4px 0 0;
-  color: var(--muted);
-  font-size: 12px;
-}
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-  margin: 16px 0 12px;
-}
-.stat-card {
-  background: rgba(163, 177, 138, 0.1);
-  border-radius: 12px;
-  padding: 12px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.label {
-  font-size: 12px;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-.value {
-  font-size: 20px;
-  font-weight: 700;
-}
 .sub-section {
-  margin-top: 20px;
-}
-.sub-section h4 {
-  margin: 0 0 12px;
-  font-size: 15px;
-  font-weight: 600;
+  margin-top: 16px;
 }
 .top-posts {
   list-style: none;
@@ -264,62 +167,6 @@ onUnmounted(() => {
 }
 .title:hover {
   color: #A3B18A;
-}
-.regions {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.region-row {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.region-bar {
-  position: relative;
-  height: 6px;
-  border-radius: 999px;
-  background: rgba(148, 163, 184, 0.2);
-  overflow: hidden;
-}
-.fill {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  background: linear-gradient(90deg, #A3B18A, #8FA075);
-}
-.region-info {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 12px;
-  color: var(--muted);
-}
-.toggle-button {
-  margin-top: 12px;
-  width: 100%;
-  border: 1px dashed rgba(107, 112, 92, 0.4);
-  background: rgba(163, 177, 138, 0.1);
-  color: #6B705C;
-  padding: 8px 0;
-  border-radius: 10px;
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-.toggle-button:hover {
-  background: rgba(163, 177, 138, 0.2);
-  color: #3F4238;
-  border-color: #A3B18A;
-}
-.name {
-  font-weight: 600;
-  color: var(--text);
-  text-transform: capitalize;
-}
-.meta {
-  font-variant-numeric: tabular-nums;
 }
 .loading {
   margin-top: 16px;

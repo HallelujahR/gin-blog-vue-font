@@ -4,9 +4,6 @@
       <h1>工具集合</h1>
       <p class="lead">快速访问一些轻量、有趣或实用的小工具。</p>
     </header>
-    <section class="tool-full analytics">
-      <StatsOverview />
-    </section>
     <h2 class="section-title">小工具入口</h2>
     <div class="tool-list">
       <article class="tool-card" @click="go('ToolsImageCompress')">
@@ -33,7 +30,6 @@
 <script setup>
 import { useRouter } from 'vue-router';
 import catLogo from '../assets/tool-cat.svg';
-import StatsOverview from '../components/StatsOverview.vue';
 
 const router = useRouter();
 const go = (name) => {
@@ -63,8 +59,6 @@ const go = (name) => {
 .tool-info p { margin: 6px 0 0; font-size: 14px; color: var(--muted); line-height: 1.6; }
 .enter-btn { align-self: flex-start; padding: 0 16px; height: 32px; border-radius: 999px; border: none; background: linear-gradient(135deg, #A3B18A, #8FA075); color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease; }
 .tool-card:hover .enter-btn { transform: translateX(2px); box-shadow: 0 10px 20px rgba(163, 177, 138, 0.35); }
-.tool-full { display: flex; flex-direction: column; gap: 16px; }
-.analytics { order: 0; }
 .section-title { margin: 12px 0 -4px; font-size: 18px; font-weight: 600; color: var(--text); }
 </style>
 
