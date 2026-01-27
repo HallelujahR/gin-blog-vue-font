@@ -121,6 +121,7 @@ export const apiAdminUsers = {
   delete: (id) => adminHttp.delete(`/admin/users/${id}`),
   updateStatus: (id, status) => adminHttp.put(`/admin/users/${id}/status`, { status }),
   updateRole: (id, role) => adminHttp.put(`/admin/users/${id}/role`, { role }),
+  updatePassword: (id, new_password) => adminHttp.put(`/admin/users/${id}/password`, { new_password }),
 };
 
 // 页面管理API
