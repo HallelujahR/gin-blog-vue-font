@@ -35,15 +35,7 @@
           <span class="footer-icon">📄</span>
           <span>吉ICP备2025034013号-1</span>
         </a>
-        <a
-          href="https://icp.gov.moe/?keyword=20250798"
-          target="_blank"
-          rel="noopener"
-          class="footer-item beian-link"
-        >
-          <span class="footer-icon">😴</span>
-          <span>萌ICP备20250798号</span>
-        </a>
+        <a href="https://icp.gov.moe/?keyword=20260512" target="_blank">萌ICP备20260512号</a>
         <!-- 如需公安备案，可启用下列示例，并替换为真实备案号
         <a
           href="https://www.beian.gov.cn/portal/registerSystemInfo?recordcode=XXXXXX"
