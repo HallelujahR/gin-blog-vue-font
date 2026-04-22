@@ -97,6 +97,74 @@
           </div>
           <div class="admin-panel-body admin-stack">
             <div class="admin-fieldset">
+              <div class="tax-label-row">
+                <label>智能推荐</label>
+                <button
+                  type="button"
+                  class="admin-mini-btn"
+                  :disabled="suggestingTaxonomy"
+                  @click="requestTaxonomySuggestions()"
+                >
+                  {{ suggestingTaxonomy ? '分析中...' : '刷新推荐' }}
+                </button>
+              </div>
+              <div class="taxonomy-recommend-panel">
+                <p class="taxonomy-recommend-copy">
+                  根据标题、摘要和正文给出推荐，你点选后才会加入分类或标签。
+                </p>
+                <p v-if="taxonomyHint" class="admin-help taxonomy-hint">{{ taxonomyHint }}</p>
+
+                <div class="taxonomy-recommend-group">
+                  <div class="taxonomy-recommend-head">
+                    <span>推荐分类</span>
+                    <span class="taxonomy-recommend-meta">{{ taxonomySuggestions.categories.length }} 项</span>
+                  </div>
+                  <div v-if="taxonomySuggestions.categories.length" class="taxonomy-suggestion-list">
+                    <button
+                      v-for="item in taxonomySuggestions.categories"
+                      :key="`category-suggestion-${item.id}`"
+                      type="button"
+                      class="taxonomy-suggestion-chip"
+                      :class="{ active: form.category_ids.includes(item.id) }"
+                      @click="toggleCategory(item.id)"
+                    >
+                      <span class="taxonomy-suggestion-title">{{ item.name }}</span>
+                      <span class="taxonomy-suggestion-score">匹配 {{ item.score }}</span>
+                      <span v-if="item.matched_keywords?.length" class="taxonomy-suggestion-keywords">
+                        {{ item.matched_keywords.slice(0, 3).join(' / ') }}
+                      </span>
+                    </button>
+                  </div>
+                  <div v-else class="admin-help">还没有推荐分类，写得更具体一些会更容易命中。</div>
+                </div>
+
+                <div class="taxonomy-recommend-group">
+                  <div class="taxonomy-recommend-head">
+                    <span>推荐标签</span>
+                    <span class="taxonomy-recommend-meta">{{ taxonomySuggestions.tags.length }} 项</span>
+                  </div>
+                  <div v-if="taxonomySuggestions.tags.length" class="taxonomy-suggestion-list">
+                    <button
+                      v-for="item in taxonomySuggestions.tags"
+                      :key="`tag-suggestion-${item.id}`"
+                      type="button"
+                      class="taxonomy-suggestion-chip"
+                      :class="{ active: form.tag_ids.includes(item.id) }"
+                      @click="toggleTag(item.id)"
+                    >
+                      <span class="taxonomy-suggestion-title">{{ item.name }}</span>
+                      <span class="taxonomy-suggestion-score">匹配 {{ item.score }}</span>
+                      <span v-if="item.matched_keywords?.length" class="taxonomy-suggestion-keywords">
+                        {{ item.matched_keywords.slice(0, 3).join(' / ') }}
+                      </span>
+                    </button>
+                  </div>
+                  <div v-else class="admin-help">还没有推荐标签，稍后可以点击“刷新推荐”再试一次。</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="admin-fieldset">
               <label>分类</label>
               <div class="tax-selector">
                 <input
@@ -178,7 +246,7 @@
 </template>
 
 <script setup>
-import { computed, ref, onMounted, onBeforeUnmount } from 'vue';
+import { computed, ref, onMounted, onBeforeUnmount, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { MdEditor } from 'md-editor-v3';
 import { apiAdminPosts, apiAdminUpload } from '../../api/admin.js';
@@ -201,6 +269,13 @@ const previewUrl = ref('');
 const imageFile = ref(null);
 const fileInput = ref(null);
 const uploadingImage = ref(false);
+const suggestingTaxonomy = ref(false);
+const taxonomyHint = ref('输入标题和正文后会自动刷新推荐，也可以手动点击“刷新推荐”。');
+const taxonomySuggestions = ref({
+  categories: [],
+  tags: [],
+});
+let suggestTimer = null;
 
 const form = ref({
   title: '',
@@ -213,17 +288,27 @@ const form = ref({
 });
 
 const normalizedIncludes = (target, keyword) => target.toLowerCase().includes(keyword.toLowerCase());
+const hasSuggestionInput = computed(() => {
+  const titleLength = form.value.title.trim().length;
+  const excerptLength = form.value.excerpt.trim().length;
+  const contentLength = form.value.content.trim().length;
+  return titleLength >= 4 || excerptLength >= 8 || contentLength >= 24;
+});
 
 const filteredCategories = computed(() => {
   const keyword = categoryKeyword.value.trim();
   if (!keyword) return categories.value;
-  return categories.value.filter((item) => normalizedIncludes(item.name || '', keyword));
+  return categories.value.filter((item) =>
+    normalizedIncludes(item.name || '', keyword) || normalizedIncludes(item.slug || '', keyword)
+  );
 });
 
 const filteredTags = computed(() => {
   const keyword = tagKeyword.value.trim();
   if (!keyword) return tags.value;
-  return tags.value.filter((item) => normalizedIncludes(item.name || '', keyword));
+  return tags.value.filter((item) =>
+    normalizedIncludes(item.name || '', keyword) || normalizedIncludes(item.slug || '', keyword)
+  );
 });
 
 const selectedCategories = computed(() =>
@@ -247,6 +332,51 @@ const toggleCategory = (id) => {
 
 const toggleTag = (id) => {
   form.value.tag_ids = toggleSelection(form.value.tag_ids, id);
+};
+
+const requestTaxonomySuggestions = async ({ silent = false } = {}) => {
+  if (!hasSuggestionInput.value) {
+    taxonomySuggestions.value = { categories: [], tags: [] };
+    taxonomyHint.value = '标题至少 4 个字，或正文至少 24 个字后再推荐会更准确。';
+    return;
+  }
+
+  suggestingTaxonomy.value = true;
+  try {
+    const response = await apiAdminPosts.suggestTaxonomy({
+      title: form.value.title,
+      excerpt: form.value.excerpt,
+      content: form.value.content,
+    });
+    const suggestions = response.data?.suggestions || response.data?.data?.suggestions || response.data?.data || response.data || {};
+    taxonomySuggestions.value = {
+      categories: Array.isArray(suggestions.categories) ? suggestions.categories : [],
+      tags: Array.isArray(suggestions.tags) ? suggestions.tags : [],
+    };
+
+    const categoryCount = taxonomySuggestions.value.categories.length;
+    const tagCount = taxonomySuggestions.value.tags.length;
+    taxonomyHint.value = `已生成 ${categoryCount} 个分类推荐和 ${tagCount} 个标签推荐，点一下才会加入已选项。`;
+  } catch (error) {
+    console.error('获取分类标签推荐失败:', error);
+    taxonomySuggestions.value = { categories: [], tags: [] };
+    taxonomyHint.value = '推荐暂时不可用，你仍然可以手动选择分类和标签。';
+    if (!silent) {
+      showToast('获取分类标签推荐失败', 'warn');
+    }
+  } finally {
+    suggestingTaxonomy.value = false;
+  }
+};
+
+const scheduleSuggestionRefresh = () => {
+  if (suggestTimer) {
+    clearTimeout(suggestTimer);
+  }
+
+  suggestTimer = window.setTimeout(() => {
+    requestTaxonomySuggestions({ silent: true });
+  }, 900);
 };
 
 async function uploadImages(files = []) {
@@ -429,6 +559,10 @@ const fetchPost = async () => {
       previewUrl.value = post.cover_image;
       imageFile.value = null;
     }
+
+    if (hasSuggestionInput.value) {
+      await requestTaxonomySuggestions({ silent: true });
+    }
   } catch (error) {
     console.error('获取文章失败:', error);
     showToast(`获取文章失败: ${error.response?.data?.error || error.message || '未知错误'}`, 'error', 3000);
@@ -512,12 +646,24 @@ onMounted(async () => {
   await Promise.all([fetchCategories(), fetchTags()]);
   if (isEdit.value) {
     await fetchPost();
+  } else {
+    taxonomyHint.value = '开始写作后会自动刷新推荐，也可以手动点击“刷新推荐”。';
   }
 });
+
+watch(
+  () => [form.value.title, form.value.excerpt, form.value.content],
+  () => {
+    scheduleSuggestionRefresh();
+  }
+);
 
 onBeforeUnmount(() => {
   if (previewUrl.value && previewUrl.value.startsWith('blob:')) {
     URL.revokeObjectURL(previewUrl.value);
+  }
+  if (suggestTimer) {
+    clearTimeout(suggestTimer);
   }
 });
 </script>
@@ -579,6 +725,96 @@ onBeforeUnmount(() => {
 .tax-selector {
   display: grid;
   gap: 10px;
+}
+
+.tax-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.taxonomy-recommend-panel {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid rgba(95, 122, 86, 0.16);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at top right, rgba(126, 156, 112, 0.12), transparent 34%),
+    linear-gradient(180deg, rgba(251, 248, 240, 0.96), rgba(246, 241, 231, 0.9));
+}
+
+.taxonomy-recommend-copy {
+  margin: 0;
+  color: var(--admin-soft-text);
+  line-height: 1.6;
+}
+
+.taxonomy-hint {
+  margin: 0;
+}
+
+.taxonomy-recommend-group {
+  display: grid;
+  gap: 10px;
+}
+
+.taxonomy-recommend-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.95rem;
+  color: var(--admin-text);
+}
+
+.taxonomy-recommend-meta {
+  color: var(--admin-soft-text);
+  font-size: 0.85rem;
+}
+
+.taxonomy-suggestion-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.taxonomy-suggestion-chip {
+  display: grid;
+  gap: 4px;
+  min-width: 148px;
+  padding: 10px 12px;
+  border: 1px solid rgba(95, 122, 86, 0.14);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.72);
+  text-align: left;
+  color: #334234;
+  cursor: pointer;
+  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+
+.taxonomy-suggestion-chip:hover {
+  transform: translateY(-1px);
+  border-color: rgba(95, 122, 86, 0.28);
+  background: rgba(250, 253, 247, 0.95);
+}
+
+.taxonomy-suggestion-chip.active {
+  border-color: rgba(107, 143, 113, 0.42);
+  background: rgba(107, 143, 113, 0.12);
+  box-shadow: inset 0 0 0 1px rgba(107, 143, 113, 0.1);
+}
+
+.taxonomy-suggestion-title {
+  font-weight: 600;
+}
+
+.taxonomy-suggestion-score,
+.taxonomy-suggestion-keywords {
+  font-size: 0.8rem;
+  color: var(--admin-soft-text);
 }
 
 .tax-search {

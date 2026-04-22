@@ -60,6 +60,11 @@ export const apiComments = {
   create: (payload) => http.post('/comments', payload),
 };
 
+export const apiGuestbook = {
+  list: (params = {}) => http.get('/guestbook', { params }),
+  create: (payload) => http.post('/guestbook', payload),
+};
+
 export const apiMeta = {
   categories: () => http.get('/categories'),
   tags: () => http.get('/tags'),

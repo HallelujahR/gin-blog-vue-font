@@ -53,6 +53,12 @@ export const adminRoutes = [
         meta: { requiresAuth: true, isAdmin: true, title: '评论管理' }
       },
       {
+        path: 'guestbook',
+        name: 'AdminGuestbook',
+        component: () => import('../views/admin/Guestbook.vue'),
+        meta: { requiresAuth: true, isAdmin: true, title: '留言板管理' }
+      },
+      {
         path: 'users',
         name: 'AdminUsers',
         component: () => import('../views/admin/Users.vue'),
@@ -104,4 +110,3 @@ export const adminBeforeEach = (to, from, next) => {
   
   next();
 };
-

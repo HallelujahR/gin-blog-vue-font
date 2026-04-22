@@ -15,6 +15,7 @@ export const apiAdminAuth = {
 export const apiAdminPosts = {
   list: (params = {}) => adminHttp.get('/admin/posts', { params }),
   detail: (id) => adminHttp.get(`/admin/posts/${id}`),
+  suggestTaxonomy: (payload) => adminHttp.post('/admin/posts/suggest-taxonomy', payload),
   // 创建文章：支持FormData（有文件时）或JSON（无文件时）
   create: (payload, imageFile = null) => {
     if (imageFile) {
@@ -116,6 +117,12 @@ export const apiAdminComments = {
   updateStatus: (id, status) => adminHttp.put(`/admin/comments/${id}/status`, { status }),
 };
 
+export const apiAdminGuestbook = {
+  list: (params = {}) => adminHttp.get('/admin/guestbook', { params }),
+  delete: (id) => adminHttp.delete(`/admin/guestbook/${id}`),
+  updateStatus: (id, status) => adminHttp.put(`/admin/guestbook/${id}/status`, { status }),
+};
+
 export const apiAdminUsers = {
   list: (params = {}) => adminHttp.get('/admin/users', { params }),
   delete: (id) => adminHttp.delete(`/admin/users/${id}`),
@@ -145,4 +152,3 @@ export const apiAdminUpload = {
     });
   },
 };
-
