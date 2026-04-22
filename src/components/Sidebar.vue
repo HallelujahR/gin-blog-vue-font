@@ -93,33 +93,41 @@ function toggleTag(slug) {
 </script>
 <style scoped>
 .sidebar { display: flex; flex-direction: column; gap: 16px; width: 100%; }
-.box { background: var(--card); border: none; border-radius: 12px; padding:14px 16px; box-shadow: 0 10px 30px rgba(107, 112, 92, 0.1); transition: box-shadow .2s ease; }
-.box:hover { box-shadow: 0 16px 40px rgba(107, 112, 92, 0.15); }
-h3 { margin: 0 0 10px; font-size:16px; color: var(--text); }
-.list { list-style:none; padding:0; margin:0; }
-.list-item { padding:8px 0; border-bottom: 1px dashed #eef2f7; }
+.box { background-color: rgba(253, 253, 253, 0.52); background-image: var(--paper-glow), var(--paper-texture); border: 1px solid rgba(122, 122, 122, 0.08); border-radius: var(--radius-md); padding: 14px 16px; box-shadow: none; transition: border-color .2s ease, background-color .2s ease; }
+.box:hover { border-color: rgba(107, 143, 113, 0.18); background-color: rgba(253, 253, 253, 0.68); }
+h3 { margin: 0 0 10px; font-size: 15px; color: var(--text-head); font-family: var(--font-body); }
+.list { list-style: none; padding: 0; margin: 0; }
+.list-item { padding: 8px 0; border-bottom: 1px dashed var(--border-light); }
 .list-item a { color: var(--text); opacity: .85; transition: color .2s ease, opacity .2s ease; }
-.list-item a:hover { color: #4f46e5; opacity: 1; }
+.list-item a:hover { color: var(--primary-1); opacity: 1; }
 .list-item:last-child { border: none; }
-.chips { display:flex; flex-wrap:wrap; gap:8px; }
-.chip { background: rgba(163, 177, 138, 0.2); border: none; color: #6B705C; padding:6px 12px; border-radius:16px; font-size:12px; transition: transform .18s ease, box-shadow .18s ease, background .18s ease, color .18s ease; }
-.chip:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(163, 177, 138, 0.25); background: rgba(163, 177, 138, 0.3); }
-.chip.active { background: #A3B18A; border-color: #A3B18A; color: #FFFFFF; font-weight: 700; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { background: transparent; border: 1px solid rgba(107, 143, 113, 0.22); color: var(--muted); padding: 3px 10px; border-radius: var(--radius-sm); font-size: 12px; transition: border-color .18s, color .18s, background .18s; }
+.chip:hover { border-color: var(--primary-1); color: var(--primary-1); }
+.chip.active { background: var(--chip-active-bg); border-color: rgba(107, 143, 113, 0.34); color: var(--primary-1); font-weight: 600; }
 .toggle-btn {
   margin-top: 12px;
   width: 100%;
-  border: 1px dashed rgba(107, 112, 92, 0.4);
-  background: rgba(163, 177, 138, 0.1);
-  color: #6B705C;
+  border: 1px dashed rgba(122, 122, 122, 0.12);
+  background: transparent;
+  color: var(--muted);
   padding: 6px 0;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   font-size: 12px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: border-color .18s, color .18s;
 }
 .toggle-btn:hover {
-  background: rgba(163, 177, 138, 0.2);
-  color: #3F4238;
-  border-color: #A3B18A;
+  border-color: var(--primary-1);
+  color: var(--primary-1);
+}
+
+@media (max-width: 640px) {
+  .sidebar {
+    gap: 12px;
+  }
+  .box {
+    padding: 12px 14px;
+  }
 }
 </style>

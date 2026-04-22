@@ -1,14 +1,20 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { adminRoutes, adminBeforeEach } from './admin.js';
+import FrontLayout from '../layouts/FrontLayout.vue';
 
-// 前台路由
 const frontRoutes = [
-  { path: '/', name: 'Home', component: () => import('../views/Home.vue') },
-  { path: '/tools', name: 'Tools', component: () => import('../views/Tools.vue') },
-  { path: '/tools/cat', name: 'ToolsCat', component: () => import('../views/tools/CatViewer.vue') },
-  { path: '/tools/image-compress', name: 'ToolsImageCompress', component: () => import('../views/tools/ImageCompressor.vue') },
-  { path: '/about', name: 'About', component: () => import('../views/About.vue') },
-  { path: '/blog/:id', name: 'BlogDetail', component: () => import('../views/BlogDetail.vue'), props: true }
+  {
+    path: '/',
+    component: FrontLayout,
+    children: [
+      { path: '', name: 'Home', component: () => import('../views/Home.vue') },
+      { path: 'tools', name: 'Tools', component: () => import('../views/Tools.vue') },
+      { path: 'tools/cat', name: 'ToolsCat', component: () => import('../views/tools/CatViewer.vue') },
+      { path: 'tools/image-compress', name: 'ToolsImageCompress', component: () => import('../views/tools/ImageCompressor.vue') },
+      { path: 'about', name: 'About', component: () => import('../views/About.vue') },
+      { path: 'blog/:id', name: 'BlogDetail', component: () => import('../views/BlogDetail.vue'), props: true },
+    ],
+  },
 ];
 
 // 合并前后台路由

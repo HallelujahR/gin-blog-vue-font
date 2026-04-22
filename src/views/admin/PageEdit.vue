@@ -1,67 +1,104 @@
 <template>
-  <div class="admin-page-edit">
-    <div class="edit-header">
-      <h2>{{ isEdit ? '编辑页面' : '创建页面' }}</h2>
-      <button @click="$router.back()" class="back-btn">返回</button>
+  <div class="admin-page-shell">
+    <div class="admin-page-head">
+      <div>
+        <p class="admin-page-subtitle">页面编辑</p>
+        <h2 class="admin-page-title">{{ isEdit ? '编辑页面' : '新建页面' }}</h2>
+      </div>
+      <div class="admin-inline-actions">
+        <button @click="$router.back()" class="admin-btn admin-btn-ghost">返回</button>
+        <button @click="handleSubmit" :disabled="loading" class="admin-btn">{{ loading ? '保存中...' : '保存页面' }}</button>
+      </div>
     </div>
 
-    <form @submit.prevent="handleSubmit" class="edit-form">
-      <div class="form-group">
-        <label>标题 *</label>
-        <input v-model="form.title" type="text" required placeholder="请输入页面标题" />
+    <div class="admin-toolbar">
+      <div class="admin-toolbar-left">
+        <span class="admin-statline">Markdown 页面编辑器</span>
+        <span class="admin-statline">用于 About 等固定内容页</span>
       </div>
+      <div class="admin-toolbar-right">
+        <span class="admin-statline">{{ isEdit ? '编辑模式' : '创建模式' }}</span>
+      </div>
+    </div>
 
-      <div class="form-group">
-        <label>Slug *</label>
-        <input v-model="form.slug" type="text" required placeholder="例如：about-me" />
-        <small style="color: #64748b; font-size: 12px; margin-top: 4px; display: block;">
-          用于URL标识，建议使用英文和连字符，例如：about-me
-        </small>
-      </div>
+    <form @submit.prevent="handleSubmit" class="admin-grid-edit">
+      <section class="admin-stack">
+        <div class="admin-panel">
+          <div class="admin-panel-head">
+            <h3 class="admin-panel-title">页面正文</h3>
+          </div>
+          <div class="admin-panel-body admin-stack">
+            <div class="admin-fieldset">
+              <label>标题 *</label>
+              <input v-model="form.title" type="text" required placeholder="请输入页面标题" class="admin-input article-title-input" />
+            </div>
 
-      <div class="form-group">
-        <label>摘要</label>
-        <textarea v-model="form.excerpt" rows="3" placeholder="请输入页面摘要（可选）"></textarea>
-      </div>
+            <div class="admin-fieldset">
+              <label>摘要</label>
+              <textarea v-model="form.excerpt" rows="4" placeholder="用于简介或 SEO 的摘要" class="admin-textarea"></textarea>
+            </div>
 
-      <div class="form-group">
-        <label>内容 *</label>
-        <div ref="editorContainer" class="quill-editor"></div>
-      </div>
+            <div class="admin-fieldset">
+              <label>内容（Markdown） *</label>
+              <MdEditor
+                v-model="form.content"
+                class="paper-editor"
+                :editorId="editorId"
+                :previewTheme="'github'"
+                :showCodeRowNumber="true"
+                :toolbarsExclude="editorToolbarsExclude"
+                :onUploadImg="handleEditorUploadImage"
+                :onSave="handleSubmit"
+                placeholder="请输入页面内容..."
+              />
+              <div v-if="uploadingImage" class="admin-help">图片上传中，请稍候...</div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-      <div class="form-group">
-        <label>状态</label>
-        <select v-model="form.status" class="select-input">
-          <option value="draft">草稿</option>
-          <option value="published">已发布</option>
-        </select>
-      </div>
+      <aside class="admin-stack">
+        <div class="admin-panel">
+          <div class="admin-panel-head">
+            <h3 class="admin-panel-title">页面信息</h3>
+          </div>
+          <div class="admin-panel-body admin-stack">
+            <div class="admin-fieldset">
+              <label>Slug *</label>
+              <input v-model="form.slug" type="text" required placeholder="例如 about-me" class="admin-input" />
+              <p class="admin-help">用于 URL 标识，建议只使用英文和连字符。</p>
+            </div>
 
-      <div class="form-actions">
-        <button type="submit" :disabled="loading" class="submit-btn">
-          {{ loading ? '保存中...' : '保存' }}
-        </button>
-        <button type="button" @click="$router.back()" class="cancel-btn">取消</button>
-      </div>
+            <div class="admin-fieldset">
+              <label>状态</label>
+              <select v-model="form.status" class="admin-select">
+                <option value="draft">草稿</option>
+                <option value="published">已发布</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </aside>
     </form>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed, onBeforeUnmount, nextTick } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { apiAdminPages } from '../../api/admin.js';
-import Quill from 'quill';
-import 'quill/dist/quill.snow.css';
+import { MdEditor } from 'md-editor-v3';
+import { apiAdminPages, apiAdminUpload } from '../../api/admin.js';
 import { showToast } from '../../utils/toast';
+import { formatFileSize, optimizeImageFile } from '../../utils/imageUpload.js';
 
 const route = useRoute();
 const router = useRouter();
 
+const editorId = 'page-markdown-editor';
+const editorToolbarsExclude = ['github', 'mermaid', 'katex'];
 const isEdit = computed(() => !!route.params.id);
 const loading = ref(false);
-const editorContainer = ref(null);
-let quillEditor = null;
+const uploadingImage = ref(false);
 
 const form = ref({
   title: '',
@@ -71,60 +108,74 @@ const form = ref({
   status: 'draft',
 });
 
-// 初始化富文本编辑器
-const initEditor = () => {
-  if (!editorContainer.value || quillEditor) return;
-  
-  nextTick(() => {
-    quillEditor = new Quill(editorContainer.value, {
-      theme: 'snow',
-      modules: {
-        toolbar: [
-          [{ 'header': [1, 2, 3, false] }],
-          ['bold', 'italic', 'underline', 'strike'],
-          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-          [{ 'color': [] }, { 'background': [] }],
-          ['link', 'image'],
-          ['blockquote', 'code-block'],
-          ['clean']
-        ]
-      },
-      placeholder: '请输入页面内容...'
-    });
-
-    // 监听内容变化
-    quillEditor.on('text-change', () => {
-      form.value.content = quillEditor.root.innerHTML;
-    });
-
-    // 设置初始内容
-    if (form.value.content) {
-      quillEditor.root.innerHTML = form.value.content;
+async function handleEditorUploadImage(files, callback) {
+  const list = Array.from(files || []).filter((file) => {
+    if (!file.type || !file.type.startsWith('image/')) {
+      showToast('仅支持上传图片文件', 'warn');
+      return false;
     }
+    if (file.size > 5 * 1024 * 1024) {
+      showToast(`图片 ${file.name} 大小超过 5MB，已跳过`, 'warn');
+      return false;
+    }
+    return true;
   });
-};
 
-// 设置编辑器内容
-const setEditorContent = (html) => {
-  if (quillEditor && html) {
-    quillEditor.root.innerHTML = html;
-    form.value.content = html;
+  if (!list.length) return;
+
+  uploadingImage.value = true;
+  try {
+    const uploaded = [];
+    for (const file of list) {
+      const optimizedFile = await optimizeImageFile(file, {
+        maxWidth: 1800,
+        maxHeight: 1800,
+        quality: 0.82,
+      });
+      const res = await apiAdminUpload.uploadImage(optimizedFile);
+      const url = res.data?.url ||
+        res.data?.image_url ||
+        res.data?.data?.url ||
+        res.data?.data?.image_url ||
+        res.data?.path ||
+        res.data?.data?.path ||
+        '';
+      if (url) {
+        if (optimizedFile !== file) {
+          showToast(`已压缩 ${file.name}：${formatFileSize(file.size)} -> ${formatFileSize(optimizedFile.size)}`, 'success');
+        }
+        uploaded.push({
+          url,
+          alt: file.name,
+          title: file.name,
+        });
+      } else {
+        showToast(`图片 ${file.name} 上传成功但未返回 URL`, 'warn');
+      }
+    }
+    if (uploaded.length) {
+      callback(uploaded);
+    }
+  } catch (error) {
+    console.error('上传图片失败:', error);
+    showToast('上传图片失败，请稍后重试', 'error', 3200);
+  } finally {
+    uploadingImage.value = false;
   }
-};
+}
 
-// 获取页面详情
 const fetchPage = async () => {
   if (!isEdit.value) return;
-  
+
   loading.value = true;
   try {
     const response = await apiAdminPages.detail(route.params.id);
     const page = response.data?.page || response.data?.data?.page || response.data?.data || response.data;
-    
+
     if (!page || !page.id) {
       throw new Error('获取的页面数据格式不正确');
     }
-    
+
     form.value = {
       title: page.title || '',
       slug: page.slug || '',
@@ -132,38 +183,26 @@ const fetchPage = async () => {
       content: page.content || '',
       status: page.status || 'draft',
     };
-    
-    // 设置编辑器内容
-    await nextTick();
-    setEditorContent(form.value.content);
   } catch (error) {
     console.error('获取页面失败:', error);
-    showToast('获取页面失败: ' + (error.response?.data?.error || error.message || '未知错误'), 'error', 3200);
+    showToast(`获取页面失败: ${error.response?.data?.error || error.message || '未知错误'}`, 'error', 3200);
     router.push({ name: 'AdminPages' });
   } finally {
     loading.value = false;
   }
 };
 
-// 提交表单
 const handleSubmit = async () => {
   if (!form.value.title || !form.value.slug) {
-    showToast('请填写标题和Slug', 'warn');
+    showToast('请填写标题和 Slug', 'warn');
     return;
   }
-
-  // 获取编辑器内容
-  if (quillEditor) {
-    form.value.content = quillEditor.root.innerHTML;
-  }
-
-  if (!form.value.content || form.value.content.trim() === '' || form.value.content === '<p><br></p>') {
+  if (!form.value.content || form.value.content.trim() === '') {
     showToast('请输入页面内容', 'warn');
     return;
   }
 
   loading.value = true;
-
   try {
     const payload = {
       title: form.value.title,
@@ -180,273 +219,65 @@ const handleSubmit = async () => {
       await apiAdminPages.create(payload);
       showToast('创建成功', 'success');
     }
-    
+
     router.push({ name: 'AdminPages' });
   } catch (error) {
     console.error('保存失败:', error);
-    const errorMsg = error.response?.data?.error || 
-                    error.response?.data?.message || 
-                    error.message || 
-                    '未知错误';
-    showToast('保存失败: ' + errorMsg, 'error', 3200);
+    const errorMsg = error.response?.data?.error ||
+      error.response?.data?.message ||
+      error.message ||
+      '未知错误';
+    showToast(`保存失败: ${errorMsg}`, 'error', 3200);
   } finally {
     loading.value = false;
   }
 };
 
 onMounted(async () => {
-  await nextTick();
-  initEditor();
   if (isEdit.value) {
     await fetchPage();
-  }
-});
-
-onBeforeUnmount(() => {
-  if (quillEditor) {
-    quillEditor = null;
   }
 });
 </script>
 
 <style scoped>
-/* 专业管理端设计 - 统一风格 */
-.admin-page-edit {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  background: #f8fafc;
-}
-
-.edit-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin: 0;
-  padding: 24px 28px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid #e2e8f0;
-  background: #ffffff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-.edit-header h2 {
-  margin: 0;
-  color: #1e293b;
-  font-size: 22px;
-  font-weight: 700;
-  letter-spacing: -0.3px;
-}
-
-.back-btn {
-  background: #f1f5f9;
-  color: #475569;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 8px 16px;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.back-btn:hover {
-  background: #e2e8f0;
-  border-color: #cbd5e1;
-  color: #334155;
-}
-
-.edit-form {
-  background: #ffffff;
-  border: none;
-  border-radius: 0;
-  padding: 28px;
-  flex: 1;
-  overflow-y: auto;
-  box-shadow: none;
-  max-width: 1200px;
-  margin: 0 auto;
-  width: 100%;
-}
-
-.form-group {
-  margin-bottom: 24px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
-  color: #334155;
-  font-size: 14px;
+.article-title-input {
+  font-size: 1.28rem;
   font-weight: 600;
-  letter-spacing: -0.2px;
 }
 
-.form-group input,
-.form-group textarea,
-.select-input {
-  width: 100%;
-  padding: 12px 16px;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  background: #ffffff;
-  color: #1e293b;
-  font-size: 14px;
-  box-sizing: border-box;
-  font-family: inherit;
-  transition: all 0.2s ease;
+:deep(.paper-editor.md-editor) {
+  height: 720px;
+  border-color: var(--admin-line);
+  border-radius: 22px;
+  background: rgba(252, 249, 242, 0.92);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
 }
 
-.form-group textarea {
-  resize: vertical;
-  font-family: inherit;
-  min-height: 80px;
+:deep(.paper-editor .md-editor-toolbar) {
+  background: rgba(247, 242, 233, 0.92);
+  border-bottom-color: var(--admin-line);
 }
 
-.form-group input:focus,
-.form-group textarea:focus,
-.select-input:focus {
-  outline: none;
-  border-color: #007AFF;
-  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+:deep(.paper-editor .md-editor-toolbar-item) {
+  color: var(--admin-soft-text);
 }
 
-.form-actions {
-  display: flex;
-  gap: 12px;
-  margin-top: 32px;
-  padding-top: 24px;
-  border-top: 1px solid #e2e8f0;
+:deep(.paper-editor .md-editor-toolbar-item:hover),
+:deep(.paper-editor .md-editor-toolbar-item.active) {
+  color: var(--admin-accent);
+  background: rgba(117, 137, 102, 0.1);
 }
 
-.submit-btn {
-  padding: 10px 20px;
-  height: 40px;
-  background: #007AFF;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  transition: all 0.2s ease;
-  display: inline-flex;
-  align-items: center;
+:deep(.paper-editor .md-editor-content),
+:deep(.paper-editor .md-editor-input-wrapper),
+:deep(.paper-editor .md-editor-preview-wrapper),
+:deep(.paper-editor .md-editor-preview) {
+  background: transparent;
 }
 
-.submit-btn:hover:not(:disabled) {
-  background: #0051D5;
-}
-
-.submit-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  background: #94a3b8;
-}
-
-.cancel-btn {
-  background: #f5f5f7;
-  color: #1d1d1f;
-  border: none;
-  border-radius: 8px;
-  padding: 10px 20px;
-  height: 40px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: inline-flex;
-  align-items: center;
-}
-
-.cancel-btn:hover {
-  background: #e5e5e7;
-}
-
-/* Quill编辑器样式 */
-.quill-editor {
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  background: #ffffff;
-  min-height: 500px;
-  transition: all 0.2s ease;
-}
-
-.quill-editor:hover {
-  border-color: #cbd5e1;
-}
-
-.quill-editor :deep(.ql-container) {
-  font-size: 14px;
-  font-family: inherit;
-  min-height: 450px;
-  border-bottom-left-radius: 8px;
-  border-bottom-right-radius: 8px;
-}
-
-.quill-editor :deep(.ql-toolbar) {
-  border-top-left-radius: 8px;
-  border-top-right-radius: 8px;
-  border-bottom: 1px solid #e2e8f0;
-  background: #f8fafc;
-  padding: 12px;
-}
-
-.quill-editor :deep(.ql-toolbar .ql-stroke) {
-  stroke: #475569;
-}
-
-.quill-editor :deep(.ql-toolbar .ql-fill) {
-  fill: #475569;
-}
-
-.quill-editor :deep(.ql-toolbar button:hover),
-.quill-editor :deep(.ql-toolbar button.ql-active) {
-  background: #e5f0ff;
-  border-radius: 4px;
-}
-
-.quill-editor :deep(.ql-toolbar .ql-picker-label:hover) {
-  color: #007AFF;
-}
-
-.quill-editor :deep(.ql-editor) {
-  color: #1e293b;
+:deep(.paper-editor .cm-editor) {
+  font-size: 15px;
   line-height: 1.8;
-  padding: 20px;
-}
-
-.quill-editor :deep(.ql-editor.ql-blank::before) {
-  color: #94a3b8;
-  font-style: normal;
-}
-
-.quill-editor :deep(.ql-editor img) {
-  max-width: 100%;
-  height: auto;
-  border-radius: 6px;
-  margin: 16px 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-.quill-editor :deep(.ql-editor pre.ql-syntax) {
-  background: #1e293b;
-  color: #e2e8f0;
-  border-radius: 6px;
-  padding: 16px;
-  overflow-x: auto;
-  font-family: ui-monospace, monospace;
-}
-
-.quill-editor :deep(.ql-editor blockquote) {
-  border-left: 4px solid #007AFF;
-  padding-left: 16px;
-  margin: 16px 0;
-  color: #64748b;
-  font-style: italic;
-  background: #f8fafc;
-  padding: 12px 16px;
-  border-radius: 0 6px 6px 0;
 }
 </style>
-

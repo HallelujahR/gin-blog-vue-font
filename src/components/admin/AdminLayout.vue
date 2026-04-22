@@ -1,55 +1,51 @@
 <template>
-  <div class="admin-layout">
+  <div class="admin-shell">
     <aside class="admin-sidebar">
-      <div class="admin-logo">
-        <h2>后台管理</h2>
+      <div class="admin-sidebar-brandbar">
+        <div class="admin-platform-mark">RB</div>
+        <div class="admin-sidebar-titlebox">
+          <strong>River Blog</strong>
+          <span>Admin System</span>
+        </div>
       </div>
+
       <nav class="admin-nav">
-        <router-link to="/admin/posts" class="nav-item">
-          <span class="nav-icon">📝</span>
-          <span>文章管理</span>
-        </router-link>
-        <router-link to="/admin/categories" class="nav-item">
-          <span class="nav-icon">📁</span>
-          <span>分类管理</span>
-        </router-link>
-        <router-link to="/admin/tags" class="nav-item">
-          <span class="nav-icon">🏷️</span>
-          <span>标签管理</span>
-        </router-link>
-        <router-link to="/admin/comments" class="nav-item">
-          <span class="nav-icon">💬</span>
-          <span>评论管理</span>
-        </router-link>
-        <router-link to="/admin/users" class="nav-item">
-          <span class="nav-icon">👥</span>
-          <span>用户管理</span>
-        </router-link>
-        <router-link to="/admin/pages" class="nav-item">
-          <span class="nav-icon">📄</span>
-          <span>页面管理</span>
-        </router-link>
+        <section v-for="group in navGroups" :key="group.label" class="admin-nav-group">
+          <p class="admin-nav-group-title">{{ group.label }}</p>
+          <router-link
+            v-for="item in group.items"
+            :key="item.to"
+            :to="item.to"
+            class="admin-nav-link"
+          >
+            <span class="admin-nav-text">{{ item.label }}</span>
+          </router-link>
+        </section>
       </nav>
     </aside>
-    <main class="admin-main">
-      <header class="admin-header">
-        <div class="header-right">
-          <div class="login-status">
-            <span class="status-indicator" :class="{ 'logged-in': user }"></span>
-            <span class="status-text">{{ user ? '已登录' : '未登录' }}</span>
+
+    <section class="admin-workspace">
+      <header class="admin-topbar">
+        <div class="admin-topbar-copy">欢迎使用博客后台管理系统</div>
+        <div class="admin-topbar-right">
+          <div class="admin-userbox">
+            <span class="admin-userbox-label">用户:</span>
+            <strong>{{ user?.username || 'Admin' }}</strong>
+            <span class="admin-userbox-divider">|</span>
+            <span class="admin-userbox-label">角色:</span>
+            <small>{{ user?.role === 'admin' ? '管理员' : user?.role || 'Admin' }}</small>
           </div>
-          <div class="user-status">
-            <span class="user-name">{{ user?.username || 'Admin' }}</span>
-            <span class="user-role">{{ user?.role === 'admin' ? '管理员' : user?.role || 'Admin' }}</span>
+          <div class="admin-topbar-actions">
+            <router-link to="/" class="admin-topbar-btn">查看前台</router-link>
+            <button @click="handleLogout" class="admin-topbar-btn admin-topbar-btn-danger">退出登录</button>
           </div>
-          <button @click="handleLogout" class="logout-btn-header">退出</button>
-          <router-link to="/" class="back-front-btn">返回前台</router-link>
         </div>
       </header>
-      <div class="admin-content">
+
+      <main class="admin-content">
         <router-view />
-      </div>
-    </main>
+      </main>
+    </section>
   </div>
 </template>
 
@@ -62,6 +58,29 @@ import { apiAdminAuth } from '../../api/admin.js';
 const router = useRouter();
 
 const user = computed(() => adminAuth.getUser());
+const navGroups = [
+  {
+    label: '内容管理',
+    items: [
+      { to: '/admin/posts', label: '文章管理' },
+      { to: '/admin/pages', label: '页面管理' },
+      { to: '/admin/comments', label: '评论管理' },
+    ],
+  },
+  {
+    label: '结构管理',
+    items: [
+      { to: '/admin/categories', label: '分类管理' },
+      { to: '/admin/tags', label: '标签管理' },
+    ],
+  },
+  {
+    label: '系统管理',
+    items: [
+      { to: '/admin/users', label: '用户管理' },
+    ],
+  },
+];
 
 const handleLogout = async () => {
   apiAdminAuth.logout();
@@ -69,13 +88,11 @@ const handleLogout = async () => {
   router.push({ name: 'AdminLogin' });
 };
 
-// 组件挂载时添加 class 到 body 和 html
 onMounted(() => {
   document.body.classList.add('admin-page');
   document.documentElement.classList.add('admin-page');
 });
 
-// 组件卸载时移除 class
 onUnmounted(() => {
   document.body.classList.remove('admin-page');
   document.documentElement.classList.remove('admin-page');
@@ -83,271 +100,262 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-/* 苹果官网风格设计 */
-.admin-layout {
-  display: flex;
-  height: 100vh;
-  width: 100%;
-  margin: 0;
-  padding: 0;
-  background: #fbfbfd;
+.admin-shell {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Arial, sans-serif;
-  overflow: hidden;
-  box-sizing: border-box;
+  inset: 0;
+  display: grid;
+  grid-template-columns: var(--admin-sidebar-width) minmax(0, 1fr);
+  background: var(--admin-bg);
 }
 
 .admin-sidebar {
-  width: 280px;
-  height: 100vh;
-  background: #ffffff;
-  border-right: 1px solid rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
-  padding: 0;
-  margin: 0;
-  z-index: 10;
-  overflow: hidden;
-  flex-shrink: 0;
+  min-height: 0;
+  border-right: 1px solid var(--admin-line);
+  background: linear-gradient(180deg, #f5f1e8 0%, #f1ece2 100%);
 }
 
-.admin-logo {
-  padding: 32px 24px 24px 24px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-  background: #ffffff;
-  flex-shrink: 0;
-  height: 80px;
+.admin-sidebar-brandbar {
+  height: 64px;
   display: flex;
   align-items: center;
-  box-sizing: border-box;
+  gap: 12px;
+  padding: 0 18px;
+  border-bottom: 1px solid var(--admin-line);
+  background: rgba(255, 255, 255, 0.5);
+  flex: 0 0 64px;
 }
 
-.admin-logo h2 {
-  margin: 0;
-  font-size: 20px;
-  color: #1d1d1f;
-  font-weight: 600;
-  letter-spacing: -0.3px;
-  line-height: 1.2;
+.admin-platform-mark {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--admin-line-strong);
+  background: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--admin-accent);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.admin-sidebar-titlebox {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.admin-sidebar-titlebox strong {
+  font-size: 14px;
+  color: var(--admin-text);
+}
+
+.admin-sidebar-titlebox span,
+.admin-nav-group-title,
+.admin-topbar-copy,
+.admin-userbox-label,
+.admin-userbox small {
+  color: var(--admin-muted);
+  font-size: 12px;
 }
 
 .admin-nav {
   flex: 1;
-  padding: 16px 16px 0 16px;
-  margin: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-  background: #ffffff;
   min-height: 0;
-  display: flex;
-  flex-direction: column;
+  overflow: auto;
+  padding: 14px 10px;
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+
+.admin-nav-group {
+  display: grid;
   gap: 4px;
-  position: relative;
 }
 
-.admin-nav::-webkit-scrollbar {
-  width: 8px;
-}
-
-.admin-nav::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.admin-nav::-webkit-scrollbar-thumb {
-  background: #d2d2d7;
-  border-radius: 4px;
-}
-
-.admin-nav::-webkit-scrollbar-thumb:hover {
-  background: #86868b;
-}
-
-.nav-item {
+.admin-nav-link {
+  min-height: 40px;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 16px;
-  margin: 0;
-  border-radius: 12px;
-  color: #86868b;
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  color: var(--admin-text);
   text-decoration: none;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  font-size: 14px;
-  font-weight: 400;
   background: transparent;
-  flex-shrink: 0;
+  transition: 160ms ease;
+  font-size: 14px;
+  font-weight: 500;
 }
 
-.nav-item:hover {
-  background: #fbfbfd;
-  color: #1d1d1f;
+.admin-nav-link:hover,
+.admin-nav-link.router-link-active {
+  border-color: rgba(88, 82, 72, 0.08);
+  background: rgba(255, 255, 255, 0.84);
+  color: var(--admin-accent);
+  box-shadow: 0 1px 2px rgba(26, 23, 18, 0.03);
 }
 
-.nav-item.router-link-active {
-  background: rgba(0, 113, 227, 0.1);
-  color: #0071e3;
-  font-weight: 400;
-}
-
-.nav-icon {
-  font-size: 18px;
-  width: 24px;
-  text-align: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.admin-main {
-  flex: 1;
+.admin-workspace {
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  background: #fbfbfd;
+  min-width: 0;
+  min-height: 0;
+  background: linear-gradient(180deg, #f4f1ea 0%, #f2eee6 100%);
 }
 
-.admin-header {
-  padding: 0 40px;
-  background: #ffffff;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+.admin-topbar {
+  height: 64px;
+  flex: 0 0 64px;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  min-height: 80px;
-  height: 80px;
-  flex-shrink: 0;
-  box-sizing: border-box;
-}
-
-.header-right {
-  display: flex;
-  align-items: center;
+  justify-content: space-between;
   gap: 16px;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--admin-line);
+  background: rgba(251, 250, 246, 0.92);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
-.login-status {
+.admin-topbar-right {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.admin-userbox {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding-right: 16px;
-  border-right: 1px solid rgba(0, 0, 0, 0.05);
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid rgba(88, 82, 72, 0.08);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.72);
+  box-sizing: border-box;
+  line-height: 1;
 }
 
-.status-indicator {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #86868b;
-  display: inline-block;
-  transition: background-color 0.2s ease;
+.admin-userbox strong {
+  font-size: 14px;
+  color: var(--admin-text);
+  line-height: 1;
 }
 
-.status-indicator.logged-in {
-  background: #30d158;
-}
-
-.status-text {
+.admin-userbox-divider {
+  color: var(--admin-faint);
   font-size: 12px;
-  color: #86868b;
-  font-weight: 400;
+  line-height: 1;
 }
 
-.user-status {
+.admin-userbox-label,
+.admin-userbox small {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+}
+
+.admin-topbar-actions {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  padding-right: 16px;
-  border-right: 1px solid rgba(0, 0, 0, 0.05);
+  align-items: center;
+  gap: 8px;
 }
 
-.user-name {
-  font-size: 13px;
-  font-weight: 400;
-  color: #1d1d1f;
-  line-height: 1.4;
-}
-
-.user-role {
-  font-size: 12px;
-  color: #86868b;
-  margin-top: 2px;
-  line-height: 1.4;
-}
-
-.logout-btn-header {
-  background: transparent;
-  color: #ff3b30;
-  border: 1px solid #ff3b30;
-  border-radius: 980px;
-  padding: 6px 14px;
-  font-size: 13px;
-  font-weight: 400;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.logout-btn-header:hover {
-  background: #ff3b30;
-  color: #ffffff;
-  transform: translateY(-1px);
-}
-
-.back-front-btn {
-  padding: 6px 16px;
-  background: #0071e3;
-  color: #fff;
+.admin-topbar-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(88, 82, 72, 0.08);
+  background: rgba(255, 255, 255, 0.82);
+  color: var(--admin-text);
   text-decoration: none;
-  border-radius: 980px;
   font-size: 13px;
-  font-weight: 400;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 500;
+  line-height: 1;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+  cursor: pointer;
+  box-sizing: border-box;
+  white-space: nowrap;
+  vertical-align: middle;
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+  font-family: inherit;
 }
 
-.back-front-btn:hover {
-  background: #0077ed;
-  transform: translateY(-1px);
+.admin-topbar-btn:hover {
+  border-color: rgba(88, 82, 72, 0.14);
+  background: #fff;
+}
+
+.admin-topbar-btn-danger {
+  color: var(--admin-danger);
+}
+
+.admin-topbar-btn-danger:hover {
+  border-color: rgba(182, 93, 93, 0.2);
+  background: rgba(182, 93, 93, 0.06);
 }
 
 .admin-content {
   flex: 1;
-  padding: 0;
-  overflow-y: auto;
-  background: #fbfbfd;
-  position: relative;
+  min-height: 0;
+  overflow: auto;
+  padding: 20px 24px 24px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0)),
+    #f4f1ea;
 }
 
-.admin-content::-webkit-scrollbar {
-  width: 10px;
+@media (max-width: 1080px) {
+  .admin-shell {
+    position: static;
+    min-height: 100vh;
+    grid-template-columns: 1fr;
+  }
+
+  .admin-sidebar {
+    border-right: 0;
+    border-bottom: 1px solid var(--admin-line);
+  }
+
+  .admin-nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    overflow: visible;
+  }
 }
 
-.admin-content::-webkit-scrollbar-track {
-  background: transparent;
-}
+@media (max-width: 720px) {
+  .admin-topbar {
+    height: auto;
+    padding: 14px;
+    align-items: flex-start;
+    flex-direction: column;
+  }
 
-.admin-content::-webkit-scrollbar-thumb {
-  background: #d2d2d7;
-  border-radius: 5px;
-}
+  .admin-topbar-right {
+    width: 100%;
+    align-items: stretch;
+    flex-direction: column;
+  }
 
-.admin-content::-webkit-scrollbar-thumb:hover {
-  background: #86868b;
+  .admin-topbar-actions {
+    flex-wrap: wrap;
+  }
+
+  .admin-nav {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-content {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
 }
 </style>
-
-<style>
-/* 全局样式：确保后台管理页面时 body 和 html 背景色一致 */
-body.admin-page,
-html.admin-page {
-  background: #fbfbfd !important;
-  height: 100% !important;
-  overflow: hidden !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
-</style>
-
-

@@ -17,8 +17,8 @@
             v-for="(post, index) in topPosts"
             :key="post.path"
             class="top-post"
-            :style="{ backgroundColor: post.bgColor }"
           >
+            <span class="top-post-rank">{{ String(index + 1).padStart(2, '0') }}</span>
             <router-link :to="post.route" class="title">{{ post.title }}</router-link>
           </li>
           <li v-if="topPosts.length === 0" class="empty">暂无数据</li>
@@ -39,18 +39,15 @@ const loading = ref(false);
 const stats = ref(null);
 const error = ref('');
 
-const topPostColors = ['#EEF2FF', '#DCFCE7', '#FFE4E6', '#E0F2FE', '#F5F3FF'];
-
 const topPosts = computed(() => {
   if (!stats.value) return [];
-  return stats.value.topPosts.map((post, index) => {
+  return stats.value.topPosts.map((post) => {
     const route = normalizeRoute(post.path);
     const fallbackTitle = prettifyPath(route);
     return {
       ...post,
       route,
       title: post.title?.trim() || fallbackTitle,
-      bgColor: topPostColors[index % topPostColors.length],
     };
   });
 });
@@ -116,10 +113,12 @@ onUnmounted(() => {
 </script>
 <style scoped>
 .stats-wrapper {
-  background: var(--card);
+  background-color: rgba(253, 253, 253, 0.38);
+  background-image: var(--paper-glow), var(--paper-texture);
   color: var(--text);
-  border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(107, 112, 92, 0.1);
+  border: 1px solid rgba(122, 122, 122, 0.07);
+  border-radius: var(--radius-md);
+  box-shadow: none;
   padding: 20px 22px 24px;
   width: 100%;
   box-sizing: border-box;
@@ -132,7 +131,9 @@ onUnmounted(() => {
 }
 .stats-header h3 {
   margin: 0;
-  font-size: 18px;
+  font-size: 16px;
+  color: var(--text-head);
+  font-family: var(--font-body);
 }
 .sub-section {
   margin-top: 16px;
@@ -143,20 +144,27 @@ onUnmounted(() => {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 .top-post {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 12px;
-  border-radius: 12px;
-  border: 1px solid rgba(163, 177, 138, 0.2);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(122, 122, 122, 0.06);
+  background: rgba(255, 255, 255, 0.2);
+  transition: border-color .18s, background .18s;
 }
 .top-post:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 18px rgba(107, 112, 92, 0.12);
+  border-color: rgba(107, 143, 113, 0.18);
+  background: rgba(255, 255, 255, 0.34);
+}
+.top-post-rank {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--faint);
+  min-width: 2ch;
 }
 .title {
   color: var(--text);
@@ -166,7 +174,7 @@ onUnmounted(() => {
   transition: color 0.15s ease;
 }
 .title:hover {
-  color: #A3B18A;
+  color: var(--primary-1);
 }
 .loading {
   margin-top: 16px;
@@ -174,10 +182,11 @@ onUnmounted(() => {
   color: var(--muted);
 }
 .error-banner {
-  background: rgba(248, 113, 113, 0.12);
-  border-radius: 12px;
+  background: rgba(196, 92, 92, 0.06);
+  border: 1px solid rgba(196, 92, 92, 0.2);
+  border-radius: var(--radius-sm);
   padding: 12px 14px;
-  color: #b91c1c;
+  color: #C45C5C;
   font-size: 13px;
 }
 .empty {
@@ -185,5 +194,18 @@ onUnmounted(() => {
   color: var(--muted);
   margin: 0;
 }
-</style>
 
+@media (max-width: 640px) {
+  .stats-wrapper {
+    padding: 16px 16px 18px;
+  }
+  .top-post {
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .title {
+    font-size: 13px;
+    line-height: 1.6;
+  }
+}
+</style>

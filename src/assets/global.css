@@ -1,98 +1,200 @@
-/* 前台默认使用明亮配色；如需深色，在根元素加 data-theme='dark' */
+/* 冷白纸张 + 铅笔灰 设计令牌 */
 :root {
-  /* 摩卡灰与豆沙绿配色方案 */
-  --bg: #F5F5F3; /* 米灰背景 */
-  --text: #3F4238; /* 深摩卡 - 文章标题、加粗文字 */
-  --muted: #6B705C; /* 摩卡灰 - 次级文字、侧边栏标题、图标颜色 */
-  --card: #FFFFFF; /* 卡片保持纯白 */
-  /* 极浅分隔色，接近无边框效果 */
-  --border: rgba(107, 112, 92, 0.15); /* 摩卡灰边框 */
-  --chip: rgba(163, 177, 138, 0.2); /* 豆沙绿浅色填充 */
-  --chip-border: rgba(163, 177, 138, 0.3); /* 豆沙绿边框 */
-  --primary-1: #A3B18A; /* 豆沙绿主色 */
-  --primary-2: #8FA075; /* 豆沙绿深色 */
+  /* --- Surface palette (cool paper tones) --- */
+  --bg:          #F0F0EC;
+  --card:        #FDFDFD;
+  --card-alt:    #F7F7F4;
+
+  /* --- Text palette (pencil gray) --- */
+  --text:        #3A3A3A;
+  --text-head:   #2C2C2C;
+  --muted:       #7A7A7A;
+  --faint:       #B0B0B0;
+
+  /* --- Accent (pencil green) --- */
+  --primary-1:   #6B8F71;
+  --primary-2:   #5A7A5F;
+
+  /* --- Borders (pencil strokes) --- */
+  --border:      rgba(122, 122, 122, 0.18);
+  --border-light:rgba(122, 122, 122, 0.1);
+
+  /* --- Chips / tags --- */
+  --chip:        transparent;
+  --chip-border: rgba(107, 143, 113, 0.42);
+  --chip-active-bg: rgba(107, 143, 113, 0.08);
+
+  /* --- Shadows (paper curl -- minimal) --- */
+  --shadow-sm:   0 1px 2px rgba(58, 58, 58, 0.028);
+  --shadow-md:   0 2px 8px rgba(58, 58, 58, 0.045);
+  --shadow-lg:   0 8px 24px rgba(58, 58, 58, 0.05), 0 1px 3px rgba(58, 58, 58, 0.03);
+
+  /* --- Radius (minimal -- paper sheets) --- */
+  --radius-sm:  2px;
+  --radius-md:  4px;
+  --radius-lg:  6px;
+
+  /* --- Typography --- */
+  --font-body: 'Noto Serif SC', 'Source Han Serif SC', 'Songti SC', Georgia, 'Times New Roman', serif;
+  --font-sans:  'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  --font-mono:  'IBM Plex Mono', 'SF Mono', 'Fira Code', monospace;
+
+  /* --- Paper texture (SVG noise) --- */
+  --paper-texture: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+  --paper-glow: radial-gradient(circle at top, rgba(255, 255, 255, 0.85), transparent 58%);
+  --paper-grid: linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0));
 }
 
 :root[data-theme='dark'] {
-  --bg: #0b101a;
-  --text: #eaf1ff;
-  --muted: #93a4c8;
-  --card: #0f1420;
-  --border: #2a3242;
-  --chip: #16223c;
-  --chip-border: #2a3242;
-  --primary-1: #233159;
-  --primary-2: #344269;
+  --bg:          #1A1A1E;
+  --card:        #242428;
+  --card-alt:    #2A2A2E;
+  --text:        #D4D4D0;
+  --text-head:   #E8E8E4;
+  --muted:       #8A8A86;
+  --faint:       #5A5A58;
+  --primary-1:   #7DA883;
+  --primary-2:   #6B9A71;
+  --border:      rgba(212, 212, 208, 0.16);
+  --border-light:rgba(212, 212, 208, 0.08);
+  --chip:        transparent;
+  --chip-border: rgba(125, 168, 131, 0.5);
+  --chip-active-bg: rgba(125, 168, 131, 0.1);
+  --shadow-sm:   0 1px 2px rgba(0,0,0,0.2);
+  --shadow-md:   0 2px 6px rgba(0,0,0,0.25);
+  --shadow-lg:   0 4px 12px rgba(0,0,0,0.3);
+  --paper-texture: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  --paper-glow: radial-gradient(circle at top, rgba(255, 255, 255, 0.08), transparent 58%);
+  --paper-grid: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0));
 }
 
+/* --- Global resets --- */
 body {
   margin: 0;
-  font-family:
-    'SF Pro Display', 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Arial, sans-serif;
-  background: var(--bg);
-  min-height: 100vh;
+  font-family: var(--font-sans);
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(circle at top center, rgba(255, 255, 255, 0.7), transparent 36%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0) 22%),
+    linear-gradient(90deg, rgba(58, 58, 58, 0.018) 0, rgba(58, 58, 58, 0.018) 1px, transparent 1px, transparent 100%),
+    var(--paper-grid);
+  background-size: auto, auto, 24px 24px, auto;
   color: var(--text);
-}
-#app {
-  max-width: 1100px;
-  margin: 44px auto;
-  background: transparent;
-  border-radius: 14px;
-  padding: 12px 26px 48px;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.65;
 }
 
-/* 后台管理页面充满屏幕 */
+#app {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 36px 16px 56px;
+  background: transparent;
+}
+
+::selection {
+  background: rgba(107, 143, 113, 0.16);
+  color: var(--text-head);
+}
+
 #app:has(.admin-layout) {
   max-width: 100%;
   margin: 0;
   padding: 0;
-  border-radius: 0;
 }
 
-/* 后台管理页面时，body 和 html 背景色与布局一致 */
 body:has(.admin-layout),
 html:has(.admin-layout) {
   background: #fbfbfd;
   height: 100%;
   overflow: hidden;
 }
-a { color: #A3B18A; text-decoration: none; transition: color .18s; }
-a.router-link-exact-active { color: inherit; font-weight: 700; background: rgba(163, 177, 138, 0.2); padding: 6px 10px; border-radius: 8px; }
-nav a { padding: 6px 10px; border-radius: 8px; color: #6B705C; transition: background .18s,color .18s; }
-nav a:hover { background: rgba(163, 177, 138, 0.15); color: #3F4238; }
-/* 前台导航：无边框、轻阴影 */
+
+a { color: var(--primary-1); text-decoration: none; transition: color .18s; }
+a:hover { color: var(--primary-2); }
+
+a.router-link-exact-active {
+  color: inherit;
+  font-weight: inherit;
+  border-bottom: none;
+  padding-bottom: 0;
+  background: none;
+}
+
+nav a {
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  transition: background .18s, color .18s;
+}
+nav a:hover { background: var(--chip-active-bg); color: var(--primary-1); }
+
 nav {
   background: var(--card);
-  border: none;
-  border-radius: 12px;
+  border: 1px solid rgba(122, 122, 122, 0.08);
+  border-radius: var(--radius-md);
   margin-bottom: 24px;
-  padding: 14px 20px;
-  font-size: 18px;
-  font-weight: 600;
-  box-shadow: 0 10px 30px rgba(107, 112, 92, 0.1);
+  padding: 12px 20px;
+  font-size: 16px;
+  font-weight: 500;
+  box-shadow: none;
 }
+
 button {
-  background: linear-gradient(95deg, var(--primary-1) 0%, var(--primary-2) 100%);
-  color: #fff;
-  border: none;
-  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
   padding: 8px 16px;
   font-size: 14px;
   cursor: pointer;
-  transition: background .18s;
+  transition: background .18s, color .18s, border-color .18s;
   margin-top: 8px;
 }
-button:hover { filter: brightness(0.92); }
+button:hover {
+  background: var(--primary-1);
+  color: #fff;
+  border-color: var(--primary-1);
+}
+
 textarea, input[type="text"], input[type="email"] {
-  border-radius: 10px;
-  border:1px solid var(--border);
-  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  padding: 8px 12px;
   width: 100%;
   margin: 8px 0;
   font-size: 14px;
-  background: #fff;
+  background: var(--card);
   color: var(--text);
+  transition: border-color .18s;
 }
-h1, h2 { color: var(--text); }
+textarea:focus, input[type="text"]:focus, input[type="email"]:focus {
+  outline: none;
+  border-color: var(--primary-1);
+}
+
+h1, h2, h3, h4 { font-family: var(--font-body); color: var(--text-head); }
+p, li { text-wrap: pretty; }
 small { color: var(--muted); }
-.comment { margin-top: 18px; border-top: 1px solid #f1f5f9; padding-top: 13px; }
+.comment { margin-top: 18px; border-top: 1px solid var(--border-light); padding-top: 13px; }
+
+/* --- Paper utility classes --- */
+.paper-card {
+  background-color: var(--card);
+  background-image: var(--paper-glow), var(--paper-texture);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.paper-ruled {
+  background-image:
+    repeating-linear-gradient(
+      transparent,
+      transparent 31px,
+      var(--border-light) 31px,
+      var(--border-light) 32px
+    );
+  background-size: 100% 32px;
+  line-height: 32px;
+}
