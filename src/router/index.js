@@ -8,6 +8,7 @@ const frontRoutes = [
     component: FrontLayout,
     children: [
       { path: '', name: 'Home', component: () => import('../views/Home.vue') },
+      { path: 'moments', name: 'Moments', component: () => import('../views/Moments.vue') },
       { path: 'tools', name: 'Tools', component: () => import('../views/Tools.vue') },
       { path: 'tools/cat', name: 'ToolsCat', component: () => import('../views/tools/CatViewer.vue') },
       { path: 'tools/image-compress', name: 'ToolsImageCompress', component: () => import('../views/tools/ImageCompressor.vue') },

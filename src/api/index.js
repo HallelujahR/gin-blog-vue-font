@@ -65,6 +65,10 @@ export const apiGuestbook = {
   create: (payload) => http.post('/guestbook', payload),
 };
 
+export const apiMoments = {
+  list: (params = {}) => http.get('/moments', { params }),
+};
+
 export const apiMeta = {
   categories: () => http.get('/categories'),
   tags: () => http.get('/tags'),

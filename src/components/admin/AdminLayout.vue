@@ -63,6 +63,7 @@ const navGroups = [
     label: '内容管理',
     items: [
       { to: '/admin/posts', label: '文章管理' },
+      { to: '/admin/moments', label: '碎碎念管理' },
       { to: '/admin/pages', label: '页面管理' },
       { to: '/admin/comments', label: '评论管理' },
       { to: '/admin/guestbook', label: '留言板管理' },

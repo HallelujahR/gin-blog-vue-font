@@ -123,6 +123,14 @@ export const apiAdminGuestbook = {
   updateStatus: (id, status) => adminHttp.put(`/admin/guestbook/${id}/status`, { status }),
 };
 
+export const apiAdminMoments = {
+  list: () => adminHttp.get('/admin/moments'),
+  detail: (id) => adminHttp.get(`/admin/moments/${id}`),
+  create: (payload) => adminHttp.post('/admin/moments', payload),
+  update: (id, payload) => adminHttp.put(`/admin/moments/${id}`, payload),
+  delete: (id) => adminHttp.delete(`/admin/moments/${id}`),
+};
+
 export const apiAdminUsers = {
   list: (params = {}) => adminHttp.get('/admin/users', { params }),
   delete: (id) => adminHttp.delete(`/admin/users/${id}`),

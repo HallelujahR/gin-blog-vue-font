@@ -53,6 +53,25 @@ export const adminRoutes = [
         meta: { requiresAuth: true, isAdmin: true, title: '评论管理' }
       },
       {
+        path: 'moments',
+        name: 'AdminMoments',
+        component: () => import('../views/admin/Moments.vue'),
+        meta: { requiresAuth: true, isAdmin: true, title: '碎碎念管理' }
+      },
+      {
+        path: 'moments/create',
+        name: 'AdminMomentCreate',
+        component: () => import('../views/admin/MomentEdit.vue'),
+        meta: { requiresAuth: true, isAdmin: true, title: '创建碎碎念' }
+      },
+      {
+        path: 'moments/edit/:id',
+        name: 'AdminMomentEdit',
+        component: () => import('../views/admin/MomentEdit.vue'),
+        props: true,
+        meta: { requiresAuth: true, isAdmin: true, title: '编辑碎碎念' }
+      },
+      {
         path: 'guestbook',
         name: 'AdminGuestbook',
         component: () => import('../views/admin/Guestbook.vue'),

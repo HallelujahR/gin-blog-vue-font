@@ -4,9 +4,10 @@
       <div class="site-nav-inner">
         <div class="site-links">
           <router-link to="/">博客首页</router-link>
-          <router-link to="/guestbook">留言板</router-link>
+          <router-link to="/moments">碎碎念</router-link>
           <router-link to="/tools">工具栏</router-link>
           <router-link to="/about">关于我</router-link>
+          <router-link to="/guestbook">留言板</router-link>
         </div>
         <div class="site-search-wrap">
           <input
