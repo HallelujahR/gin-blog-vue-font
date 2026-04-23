@@ -70,6 +70,7 @@
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue';
 import { MdPreview } from 'md-editor-v3';
+import 'md-editor-v3/lib/style.css';
 import { useRoute } from 'vue-router';
 import { apiPosts, apiComments, apiLike, apiMeta } from '../api';
 import Comment from '../components/Comment.vue';

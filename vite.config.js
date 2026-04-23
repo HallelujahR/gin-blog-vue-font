@@ -6,6 +6,25 @@ export default defineConfig(({ mode }) => {
   const isDev = mode === 'development';
   return {
     plugins: [vue()],
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('md-editor-v3')) {
+              return 'markdown-editor';
+            }
+            if (id.includes('node_modules')) {
+              if (id.includes('vue')) {
+                return 'vue-vendor';
+              }
+              if (id.includes('axios')) {
+                return 'http-vendor';
+              }
+            }
+          },
+        },
+      },
+    },
     server: {
       port: 5173,
       proxy: isDev

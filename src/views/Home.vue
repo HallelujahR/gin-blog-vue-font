@@ -41,7 +41,7 @@
         <div class="side-content">
           <div class="author-card">
             <div class="author-avatar">
-              <img :src="headerImg" alt="Author" />
+              <img :src="headerImg" alt="Author" width="80" height="80" decoding="async" />
             </div>
             <div class="author-name">RvierLog</div>
             <div class="author-role">Developer / Designer / Backend Engineer</div>
@@ -58,8 +58,8 @@
             </div>
             <router-link to="/about" class="author-link">更多关于我</router-link>
           </div>
-          <StatsOverview />
-          <Sidebar />
+          <StatsOverview v-if="widgetsReady" />
+          <Sidebar v-if="widgetsReady" />
         </div>
       </div>
     </div>
@@ -71,7 +71,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { apiPosts } from '../api';
 import Sidebar from '../components/Sidebar.vue';
 import StatsOverview from '../components/StatsOverview.vue';
-import headerImg from '../assets/header.png';
+import headerImg from '../assets/header-avatar.jpg';
 
 const route = useRoute();
 const router = useRouter();
@@ -83,7 +83,23 @@ const list = ref([]);
 const loading = ref(false);
 const hasMore = ref(true);
 const sentinel = ref(null);
+const widgetsReady = ref(false);
 let io;
+
+function scheduleWidgetsLoad() {
+  if (widgetsReady.value) return;
+
+  const activate = () => {
+    widgetsReady.value = true;
+  };
+
+  if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+    window.requestIdleCallback(activate, { timeout: 800 });
+    return;
+  }
+
+  window.setTimeout(activate, 180);
+}
 
 async function fetchPage(p = 1) {
   loading.value = true;
@@ -168,6 +184,7 @@ watch(() => [route.query.category, route.query.tag, route.query.q, route.query.s
 onMounted(async () => {
   await fetchPage(1);
   initObserver();
+  scheduleWidgetsLoad();
 });
 
 function formatDate(dateStr) {

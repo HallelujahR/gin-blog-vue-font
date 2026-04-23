@@ -49,6 +49,63 @@ http.interceptors.response.use(
 
 export default http;
 
+const memoryCache = new Map();
+
+function readCache(key, ttlMs) {
+  const now = Date.now();
+  const cached = memoryCache.get(key);
+  if (cached && now - cached.timestamp < ttlMs) {
+    return cached.value;
+  }
+
+  try {
+    const raw = sessionStorage.getItem(key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && now - parsed.timestamp < ttlMs) {
+      memoryCache.set(key, parsed);
+      return parsed.value;
+    }
+  } catch (_) {}
+
+  return null;
+}
+
+function writeCache(key, value) {
+  const payload = {
+    value,
+    timestamp: Date.now(),
+  };
+  memoryCache.set(key, payload);
+  try {
+    sessionStorage.setItem(key, JSON.stringify(payload));
+  } catch (_) {}
+}
+
+function createCachedGet(key, ttlMs, request) {
+  let inflight = null;
+
+  return async () => {
+    const cached = readCache(key, ttlMs);
+    if (cached) {
+      return { data: cached };
+    }
+
+    if (inflight) return inflight;
+
+    inflight = request()
+      .then((response) => {
+        writeCache(key, response.data);
+        return response;
+      })
+      .finally(() => {
+        inflight = null;
+      });
+
+    return inflight;
+  };
+}
+
 // Helper APIs (tree-shake friendly named exports)
 export const apiPosts = {
   list: (params = {}) => http.get('/posts', { params }),
@@ -70,8 +127,8 @@ export const apiMoments = {
 };
 
 export const apiMeta = {
-  categories: () => http.get('/categories'),
-  tags: () => http.get('/tags'),
+  categories: createCachedGet('front:categories', 10 * 60 * 1000, () => http.get('/categories')),
+  tags: createCachedGet('front:tags', 10 * 60 * 1000, () => http.get('/tags')),
 };
 
 export const apiHot = {
@@ -84,7 +141,7 @@ export const apiLike = {
 };
 
 export const apiStats = {
-  summary: () => http.get('/stats'),
+  summary: createCachedGet('front:stats-summary', 5 * 60 * 1000, () => http.get('/stats')),
 };
 
 // 图片压缩工具 APIs（对齐公开工具接口 /api/tools/image-compress）

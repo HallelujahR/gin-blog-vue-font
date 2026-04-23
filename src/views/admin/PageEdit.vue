@@ -87,6 +87,7 @@
 import { computed, ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { MdEditor } from 'md-editor-v3';
+import 'md-editor-v3/lib/style.css';
 import { apiAdminPages, apiAdminUpload } from '../../api/admin.js';
 import { showToast } from '../../utils/toast';
 import { formatFileSize, optimizeImageFile } from '../../utils/imageUpload.js';

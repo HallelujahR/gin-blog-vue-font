@@ -65,6 +65,7 @@
 <script setup>
 import { computed, ref, onMounted } from 'vue';
 import { MdPreview } from 'md-editor-v3';
+import 'md-editor-v3/lib/style.css';
 import http from '../api/index.js';
 import TechStack from '../components/TechStack.vue';
 
