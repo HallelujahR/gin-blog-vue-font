@@ -180,5 +180,12 @@ export const apiDrawGuess = {
   submitStroke: (roomId, payload) => http.post(`/tools/draw-guess/rooms/${encodeURIComponent(roomId)}/strokes`, payload),
   clearCanvas: (roomId, payload) => http.post(`/tools/draw-guess/rooms/${encodeURIComponent(roomId)}/clear`, payload),
   leaveRoom: (roomId, payload) => http.post(`/tools/draw-guess/rooms/${encodeURIComponent(roomId)}/leave`, payload),
-  streamUrl: (roomId, playerId) => `/api/tools/draw-guess/rooms/${encodeURIComponent(roomId)}/stream?player_id=${encodeURIComponent(playerId)}`,
+  socketUrl: (roomId, playerId) => {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const base = import.meta.env.VITE_API_BASE || '/api';
+    const normalizedBase = base.startsWith('http')
+      ? base.replace(/^http/, 'ws')
+      : `${protocol}//${window.location.host}${base}`;
+    return `${normalizedBase}/tools/draw-guess/rooms/${encodeURIComponent(roomId)}/ws?player_id=${encodeURIComponent(playerId)}`;
+  },
 };

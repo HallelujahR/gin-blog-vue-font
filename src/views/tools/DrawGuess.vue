@@ -4,7 +4,7 @@
       <div>
         <p class="eyebrow">多人实时小游戏</p>
         <h1>你画我猜</h1>
-        <p class="lead">最多 5 人联机，轮流作画猜词，实时积分。先填玩家名，再创建或加入房间。</p>
+        <p class="lead">最多 5 人联机，轮流作画猜词，房间内通过 WebSocket 实时同步，作画和猜词会更顺滑。</p>
       </div>
       <router-link to="/tools" class="back-link">返回工具栏</router-link>
     </header>
@@ -16,7 +16,7 @@
         <div class="entry-grid">
           <div class="entry-block">
             <h2>创建房间</h2>
-            <p>你会成为房主，凑够 2 人后就能开始。</p>
+            <p>你会成为房主，至少 2 人就能开局，系统会自动轮换作画顺序。</p>
             <button class="primary-btn" :disabled="busy" @click="handleCreateRoom">{{ busy ? '处理中...' : '创建房间' }}</button>
           </div>
           <div class="entry-block">
@@ -43,18 +43,23 @@
             <span class="status-pill" :class="room.status">{{ statusText }}</span>
             <span class="status-extra">第 {{ room.round || 0 }} 轮</span>
           </div>
-          <p class="word-line">
-            <span>当前题目</span>
-            <strong>{{ room.word_display || '等待开始' }}</strong>
-          </p>
-          <p class="word-line">
-            <span>当前画手</span>
-            <strong>{{ room.current_drawer_name || '等待中' }}</strong>
-          </p>
-          <p class="word-line">
-            <span>倒计时</span>
-            <strong>{{ room.remaining_seconds || 0 }} 秒</strong>
-          </p>
+          <div class="prompt-card" :class="{ drawer: isDrawer }">
+            <span class="prompt-label">{{ isDrawer ? '你的词语' : '猜词提示' }}</span>
+            <strong>{{ room.word_display || '等待系统出题' }}</strong>
+            <p>
+              {{ isDrawer ? '用图形表达，不要直接写字。尽量让线条简洁，别人会更容易猜到。' : '观察画布与聊天记录，随时输入你的答案，猜中会立即结算积分。' }}
+            </p>
+          </div>
+          <div class="meta-grid">
+            <p class="word-line">
+              <span>当前画手</span>
+              <strong>{{ room.current_drawer_name || '等待中' }}</strong>
+            </p>
+            <p class="word-line">
+              <span>倒计时</span>
+              <strong>{{ displayRemainingSeconds }} 秒</strong>
+            </p>
+          </div>
           <div class="room-actions">
             <button
               v-if="isHost"
@@ -66,7 +71,7 @@
             </button>
             <button class="secondary-btn" @click="handleLeaveRoom">离开房间</button>
           </div>
-          <p class="system-tip">{{ room.last_system_message || '等待玩家加入。' }}</p>
+          <p class="system-tip">{{ room.last_system_message || socketHint }}</p>
         </div>
 
         <div class="paper-card side-card">
@@ -81,6 +86,7 @@
                 <p>
                   <span v-if="player.is_host">房主</span>
                   <span v-if="player.is_drawer">作画中</span>
+                  <span v-if="!player.is_connected">离线</span>
                 </p>
               </div>
               <span class="score">{{ player.score }}</span>
@@ -116,6 +122,7 @@
               @pointermove="onPointerMove"
               @pointerup="onPointerUp"
               @pointerleave="onPointerUp"
+              @pointercancel="onPointerUp"
             ></canvas>
             <div v-if="!isDrawer" class="board-mask">
               <p>{{ room.current_drawer_name || '当前无人作画' }} 正在作画</p>
@@ -124,22 +131,42 @@
         </div>
 
         <div class="paper-card chat-card">
+          <div class="guess-panel">
+            <div class="guess-panel-copy">
+              <span class="guess-kicker">Guess Channel</span>
+              <h3>{{ canGuess ? '看到线索就快猜' : (isDrawer ? '你现在是画手' : '等待下一轮开始') }}</h3>
+              <p>{{ canGuess ? '可以连续尝试，系统会实时广播消息，猜中后立刻跳转到结算。' : '当前输入区会在可操作时自动点亮，减少误触。' }}</p>
+            </div>
+            <div class="guess-status" :class="{ live: canGuess && socketReady }">
+              <span class="guess-status-dot"></span>
+              <span>{{ socketReady ? '实时连接中' : '连接重建中' }}</span>
+            </div>
+          </div>
           <div class="chat-log" ref="chatRef">
             <div v-for="message in room.messages" :key="message.id" class="chat-line" :class="message.kind">
               <strong v-if="message.player_name">{{ message.player_name }}：</strong>
               <span>{{ message.content }}</span>
             </div>
           </div>
-          <div class="chat-input-wrap">
-            <input
-              v-model.trim="guessText"
-              class="guess-input"
-              :disabled="!canGuess"
-              placeholder="输入你的猜测"
-              @keyup.enter="handleSubmitGuess"
-            />
-            <button class="primary-btn" :disabled="!canGuess || guessBusy" @click="handleSubmitGuess">
-              {{ guessBusy ? '发送中...' : '猜一下' }}
+          <div class="composer-shell" :class="{ active: canGuess, disabled: !canGuess }">
+            <div class="composer-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none">
+                <circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="1.8" />
+                <path d="M16 16L21 21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+              </svg>
+            </div>
+            <div class="composer-body">
+              <label class="composer-label">{{ canGuess ? '输入你的猜测' : '当前不可猜词' }}</label>
+              <input
+                v-model.trim="guessText"
+                class="guess-input"
+                :disabled="!canGuess || guessBusy"
+                :placeholder="canGuess ? '试试：猫咪、咖啡、相机……' : '等待下一轮开始'"
+                @keyup.enter="handleSubmitGuess"
+              />
+            </div>
+            <button class="primary-btn composer-submit" :disabled="!canGuess || guessBusy" @click="handleSubmitGuess">
+              {{ guessBusy ? '发送中...' : '发送猜测' }}
             </button>
           </div>
         </div>
@@ -162,7 +189,10 @@ const guessBusy = ref(false);
 const guessText = ref('');
 const canvasRef = ref(null);
 const chatRef = ref(null);
-const eventSourceRef = ref(null);
+const socketRef = ref(null);
+const socketReady = ref(false);
+const displayRemainingSeconds = ref(0);
+const socketHint = ref('正在建立实时连接...');
 
 const session = reactive({
   roomId: '',
@@ -193,6 +223,12 @@ const brush = reactive({
 let canvasCtx = null;
 let drawing = false;
 let pendingPoints = [];
+let countdownTimer = null;
+let reconnectTimer = null;
+let manualClose = false;
+let strokeFrame = 0;
+let activeStrokeId = '';
+let activeStrokePoints = [];
 
 const isHost = computed(() => room.host_player_id === session.playerId);
 const isDrawer = computed(() => room.current_drawer_id === session.playerId && room.status === 'playing');
@@ -256,33 +292,83 @@ function applyJoinResult(data) {
   session.playerId = data.player_id;
   joinRoomCode.value = data.room_id;
   applyRoomSnapshot(data.room);
-  connectStream();
+  nextTick(setupCanvas);
+  connectSocket();
 }
 
-function connectStream() {
-  closeStream();
-  const source = new EventSource(apiDrawGuess.streamUrl(session.roomId, session.playerId));
-  source.onmessage = (event) => {
+function connectSocket() {
+  if (!session.roomId || !session.playerId) return;
+  closeSocket();
+  manualClose = false;
+  socketHint.value = '正在建立实时连接...';
+
+  const socket = new WebSocket(apiDrawGuess.socketUrl(session.roomId, session.playerId));
+  socket.onopen = () => {
+    socketReady.value = true;
+    socketHint.value = '实时连接稳定';
+  };
+  socket.onmessage = (event) => {
     try {
       const parsed = JSON.parse(event.data);
       if (parsed.type === 'snapshot') {
         applyRoomSnapshot(parsed.data);
       } else if (parsed.type === 'canvas') {
         applyCanvasEvent(parsed.data);
+      } else if (parsed.type === 'error') {
+        const message = parsed.data?.message || '房间操作失败';
+        showToast(message, 'warn', 2600);
       }
     } catch (_) {}
   };
-  source.onerror = () => {
-    showToast('房间连接中断，正在等待重连', 'warn', 1800);
+  socket.onclose = () => {
+    socketReady.value = false;
+    if (manualClose || !session.roomId || !session.playerId) {
+      return;
+    }
+    socketHint.value = '连接断开，正在重连...';
+    scheduleReconnect();
   };
-  eventSourceRef.value = source;
+  socket.onerror = () => {
+    socketHint.value = '连接异常，正在重连...';
+  };
+  socketRef.value = socket;
 }
 
-function closeStream() {
-  if (eventSourceRef.value) {
-    eventSourceRef.value.close();
-    eventSourceRef.value = null;
+function scheduleReconnect() {
+  if (reconnectTimer) return;
+  reconnectTimer = window.setTimeout(async () => {
+    reconnectTimer = null;
+    try {
+      const res = await apiDrawGuess.getRoom(session.roomId, session.playerId);
+      applyRoomSnapshot(res.data.room);
+      connectSocket();
+    } catch (_) {
+      socketHint.value = '房间已失效，请重新加入';
+    }
+  }, 1800);
+}
+
+function closeSocket() {
+  if (reconnectTimer) {
+    window.clearTimeout(reconnectTimer);
+    reconnectTimer = null;
   }
+  if (socketRef.value) {
+    socketRef.value.close();
+    socketRef.value = null;
+  }
+  socketReady.value = false;
+}
+
+function sendSocket(type, data = {}) {
+  if (!socketRef.value || socketRef.value.readyState !== WebSocket.OPEN) {
+    throw new Error('实时连接尚未就绪');
+  }
+  socketRef.value.send(JSON.stringify({ type, data }));
+}
+
+function canUseSocket() {
+  return socketRef.value && socketRef.value.readyState === WebSocket.OPEN;
 }
 
 function applyRoomSnapshot(snapshot) {
@@ -299,30 +385,47 @@ function applyRoomSnapshot(snapshot) {
   room.messages = snapshot.messages || [];
   room.canvas_actions = snapshot.canvas_actions || [];
   room.last_system_message = snapshot.last_system_message || '';
+  syncCountdown(snapshot.remaining_seconds || 0, snapshot.status);
   redrawCanvas();
   nextTick(scrollChatToBottom);
 }
 
 function applyCanvasEvent(action) {
-  room.canvas_actions.push(action);
-  if (room.canvas_actions.length > 320) {
-    room.canvas_actions.shift();
-  }
   if (action.kind === 'clear') {
+    room.canvas_actions = [...room.canvas_actions, action].slice(-320);
     clearBoard();
     return;
   }
   if (action.player_id === session.playerId && isDrawer.value) {
     return;
   }
-  drawStroke(action);
+  const index = room.canvas_actions.findIndex((item) =>
+    item.kind === 'stroke'
+    && item.player_id === action.player_id
+    && item.stroke_id
+    && item.stroke_id === action.stroke_id
+  );
+  if (index >= 0) {
+    room.canvas_actions.splice(index, 1, action);
+  } else {
+    room.canvas_actions.push(action);
+    if (room.canvas_actions.length > 320) {
+      room.canvas_actions.shift();
+    }
+  }
+  redrawCanvas();
 }
 
 async function handleStartGame() {
   try {
+    if (canUseSocket()) {
+      sendSocket('start', {});
+      return;
+    }
     await apiDrawGuess.startGame(session.roomId, { player_id: session.playerId });
+    socketHint.value = 'WebSocket 尚未连稳，已使用普通请求启动';
   } catch (error) {
-    showToast(error.response?.data?.error || '开始游戏失败', 'error', 3200);
+    showToast(error.response?.data?.error || error.message || '开始游戏失败', 'error', 3200);
   }
 }
 
@@ -330,30 +433,46 @@ async function handleSubmitGuess() {
   if (!guessText.value.trim()) return;
   guessBusy.value = true;
   try {
-    await apiDrawGuess.submitGuess(session.roomId, {
-      player_id: session.playerId,
-      content: guessText.value.trim(),
-    });
+    if (canUseSocket()) {
+      sendSocket('guess', { content: guessText.value.trim() });
+    } else {
+      await apiDrawGuess.submitGuess(session.roomId, {
+        player_id: session.playerId,
+        content: guessText.value.trim(),
+      });
+    }
     guessText.value = '';
   } catch (error) {
-    showToast(error.response?.data?.error || '发送猜测失败', 'error', 3000);
+    showToast(error.response?.data?.error || error.message || '发送猜测失败', 'error', 3000);
   } finally {
-    guessBusy.value = false;
+    window.setTimeout(() => {
+      guessBusy.value = false;
+    }, 160);
   }
 }
 
 async function handleClearCanvas() {
   try {
+    if (canUseSocket()) {
+      sendSocket('clear', {});
+      return;
+    }
     await apiDrawGuess.clearCanvas(session.roomId, { player_id: session.playerId });
   } catch (error) {
-    showToast(error.response?.data?.error || '清空画布失败', 'error', 3000);
+    showToast(error.response?.data?.error || error.message || '清空画布失败', 'error', 3000);
   }
 }
 
 async function handleLeaveRoom() {
   const roomId = session.roomId;
   const playerId = session.playerId;
-  closeStream();
+  manualClose = true;
+  try {
+    if (socketRef.value?.readyState === WebSocket.OPEN) {
+      sendSocket('leave', {});
+    }
+  } catch (_) {}
+  closeSocket();
   resetRoom();
   if (!roomId || !playerId) return;
   try {
@@ -377,6 +496,9 @@ function resetRoom() {
   room.messages = [];
   room.canvas_actions = [];
   room.last_system_message = '';
+  stopCountdown();
+  displayRemainingSeconds.value = 0;
+  socketHint.value = '正在建立实时连接...';
   clearBoard();
 }
 
@@ -412,12 +534,43 @@ function drawStroke(action) {
   canvasCtx.strokeStyle = action.tool === 'eraser' ? '#fdfcf7' : (action.color || '#516b57');
   canvasCtx.lineWidth = action.width || 4;
   canvasCtx.beginPath();
-  canvasCtx.moveTo(action.points[0].x, action.points[0].y);
-  for (let i = 1; i < action.points.length; i += 1) {
-    canvasCtx.lineTo(action.points[i].x, action.points[i].y);
+  const points = densifyPoints(action.points, Math.max(1.6, (action.width || 4) * 0.55));
+  canvasCtx.moveTo(points[0].x, points[0].y);
+  if (points.length === 2) {
+    canvasCtx.lineTo(points[1].x, points[1].y);
+  } else {
+    for (let i = 1; i < points.length - 1; i += 1) {
+      const midX = (points[i].x + points[i + 1].x) / 2;
+      const midY = (points[i].y + points[i + 1].y) / 2;
+      canvasCtx.quadraticCurveTo(points[i].x, points[i].y, midX, midY);
+    }
+    const last = points[points.length - 1];
+    canvasCtx.lineTo(last.x, last.y);
   }
   canvasCtx.stroke();
   canvasCtx.restore();
+}
+
+function densifyPoints(points, maxStep) {
+  if (!Array.isArray(points) || points.length < 2) {
+    return points || [];
+  }
+  const densified = [points[0]];
+  for (let i = 1; i < points.length; i += 1) {
+    const prev = points[i - 1];
+    const curr = points[i];
+    const dx = curr.x - prev.x;
+    const dy = curr.y - prev.y;
+    const distance = Math.hypot(dx, dy);
+    const segments = Math.max(1, Math.ceil(distance / maxStep));
+    for (let step = 1; step <= segments; step += 1) {
+      densified.push({
+        x: Number((prev.x + (dx * step) / segments).toFixed(2)),
+        y: Number((prev.y + (dy * step) / segments).toFixed(2)),
+      });
+    }
+  }
+  return densified;
 }
 
 function getCanvasPoint(event) {
@@ -430,45 +583,113 @@ function getCanvasPoint(event) {
   };
 }
 
+function getCanvasPoints(event) {
+  const coalesced = typeof event.getCoalescedEvents === 'function' ? event.getCoalescedEvents() : [];
+  if (!coalesced.length) {
+    return [getCanvasPoint(event)];
+  }
+  return coalesced.map((item) => getCanvasPoint(item));
+}
+
 function onPointerDown(event) {
-  if (!isDrawer.value) return;
+  if (!isDrawer.value || !socketReady.value) return;
   drawing = true;
-  pendingPoints = [getCanvasPoint(event)];
+  activeStrokeId = `stroke_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  activeStrokePoints = [];
+  canvasRef.value?.setPointerCapture?.(event.pointerId);
+  pendingPoints = [];
+  const point = getCanvasPoint(event);
+  appendPendingPoint(point);
+  appendStrokePoint(point);
 }
 
 function onPointerMove(event) {
-  if (!drawing || !isDrawer.value) return;
-  pendingPoints.push(getCanvasPoint(event));
-  if (pendingPoints.length >= 4) {
-    flushStroke(false);
+  if (!drawing || !isDrawer.value || !socketReady.value) return;
+  const points = getCanvasPoints(event);
+  for (const point of points) {
+    const previous = pendingPoints[pendingPoints.length - 1];
+    const appended = appendPendingPoint(point);
+    if (!appended) {
+      continue;
+    }
+    appendStrokePoint(point);
+    if (previous) {
+      drawStroke({
+        color: brush.color,
+        width: brush.width,
+        tool: 'pen',
+        points: [previous, point],
+      });
+    }
   }
+  scheduleStrokeFlush();
 }
 
 function onPointerUp(event) {
   if (!drawing || !isDrawer.value) return;
   drawing = false;
-  pendingPoints.push(getCanvasPoint(event));
+  canvasRef.value?.releasePointerCapture?.(event.pointerId);
+  const point = getCanvasPoint(event);
+  if (appendPendingPoint(point)) {
+    appendStrokePoint(point);
+  }
   flushStroke(true);
+  activeStrokeId = '';
+  activeStrokePoints = [];
 }
 
-async function flushStroke(force) {
+function flushStroke(force) {
+  if (strokeFrame) {
+    window.cancelAnimationFrame(strokeFrame);
+    strokeFrame = 0;
+  }
   if (pendingPoints.length < 2) {
     return;
   }
-  const payloadPoints = force ? [...pendingPoints] : pendingPoints.slice(0, pendingPoints.length - 1);
-  const keepPoint = force ? [] : [pendingPoints[pendingPoints.length - 1]];
-  pendingPoints = keepPoint;
-  const action = {
-    player_id: session.playerId,
-    color: brush.color,
-    width: brush.width,
-    tool: 'pen',
-    points: payloadPoints,
-  };
-  drawStroke(action);
+  if (!force && pendingPoints.length < 3) {
+    return;
+  }
+  if (activeStrokePoints.length < 2) {
+    return;
+  }
+  pendingPoints = force ? [] : [pendingPoints[pendingPoints.length - 1]];
   try {
-    await apiDrawGuess.submitStroke(session.roomId, action);
+    const networkPoints = densifyPoints(activeStrokePoints, Math.max(1.1, (brush.width || 4) * 0.32));
+    sendSocket('stroke', {
+      stroke_id: activeStrokeId,
+      color: brush.color,
+      width: brush.width,
+      tool: 'pen',
+      final: force,
+      points: networkPoints,
+    });
   } catch (_) {}
+}
+
+function scheduleStrokeFlush() {
+  if (strokeFrame) return;
+  strokeFrame = window.requestAnimationFrame(() => {
+    strokeFrame = 0;
+    flushStroke(false);
+  });
+}
+
+function appendPendingPoint(point) {
+  const previous = pendingPoints[pendingPoints.length - 1];
+  if (previous && previous.x === point.x && previous.y === point.y) {
+    return false;
+  }
+  pendingPoints.push(point);
+  return true;
+}
+
+function appendStrokePoint(point) {
+  const previous = activeStrokePoints[activeStrokePoints.length - 1];
+  if (previous && previous.x === point.x && previous.y === point.y) {
+    return false;
+  }
+  activeStrokePoints.push(point);
+  return true;
 }
 
 function scrollChatToBottom() {
@@ -486,6 +707,28 @@ async function copyRoomCode() {
   }
 }
 
+function syncCountdown(seconds, status) {
+  stopCountdown();
+  displayRemainingSeconds.value = seconds;
+  if (status !== 'playing' || seconds <= 0) {
+    return;
+  }
+  countdownTimer = window.setInterval(() => {
+    if (displayRemainingSeconds.value <= 0) {
+      stopCountdown();
+      return;
+    }
+    displayRemainingSeconds.value -= 1;
+  }, 1000);
+}
+
+function stopCountdown() {
+  if (countdownTimer) {
+    window.clearInterval(countdownTimer);
+    countdownTimer = null;
+  }
+}
+
 watch(playerName, (value) => {
   if (value.trim()) {
     localStorage.setItem(STORAGE_KEY, value.trim());
@@ -497,7 +740,13 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
-  handleLeaveRoom();
+  stopCountdown();
+  manualClose = true;
+  closeSocket();
+  if (strokeFrame) {
+    window.cancelAnimationFrame(strokeFrame);
+    strokeFrame = 0;
+  }
 });
 </script>
 
@@ -506,51 +755,237 @@ onBeforeUnmount(() => {
 .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
 .eyebrow { margin: 0 0 6px; font-size: 12px; letter-spacing: 0.08em; color: var(--primary-1); }
 .page-head h1 { margin: 0; font-size: 30px; }
-.lead { margin: 8px 0 0; color: var(--muted); max-width: 42rem; }
+.lead { margin: 8px 0 0; color: var(--muted); max-width: 46rem; }
 .back-link { color: var(--primary-1); }
+
 .entry-panel { display: flex; justify-content: center; }
-.entry-card { width: min(760px, 100%); background: rgba(253, 253, 250, 0.78); border: 1px solid rgba(107, 143, 113, 0.12); border-radius: 18px; padding: 28px; }
+.entry-card {
+  width: min(760px, 100%);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.86), rgba(251,249,242,0.9)),
+    radial-gradient(circle at top right, rgba(141,165,125,0.12), transparent 35%);
+  border: 1px solid rgba(107, 143, 113, 0.12);
+  border-radius: 22px;
+  padding: 28px;
+  box-shadow: 0 20px 40px rgba(60, 73, 52, 0.07);
+}
 .entry-label { display: block; margin-bottom: 8px; font-size: 13px; color: var(--muted); }
-.entry-input { margin: 0 0 16px; height: 44px; border-radius: 12px; background: rgba(255,255,255,0.78); }
+.entry-input {
+  margin: 0 0 16px;
+  height: 46px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.86);
+  border: 1px solid rgba(122,122,122,0.12);
+}
 .entry-input.small { margin-bottom: 12px; }
 .entry-grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
-.entry-block { padding: 18px; background: rgba(255,255,255,0.62); border: 1px solid rgba(122,122,122,0.08); border-radius: 16px; }
+.entry-block {
+  padding: 18px;
+  background: rgba(255,255,255,0.68);
+  border: 1px solid rgba(122,122,122,0.08);
+  border-radius: 18px;
+}
 .entry-block h2 { margin: 0 0 8px; font-size: 18px; }
 .entry-block p { margin: 0 0 14px; color: var(--muted); font-size: 14px; line-height: 1.7; }
+
 .primary-btn, .secondary-btn, .copy-btn { margin-top: 0; }
-.primary-btn { border-radius: 999px; padding: 10px 18px; border: none; background: linear-gradient(135deg, #8da57d, #6b8f71); color: #fff; font-weight: 600; }
+.primary-btn {
+  border-radius: 999px;
+  padding: 11px 18px;
+  border: none;
+  background: linear-gradient(135deg, #8da57d, #6b8f71);
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 12px 24px rgba(107, 143, 113, 0.2);
+}
 .primary-btn.ghost { background: linear-gradient(135deg, #556b56, #405545); }
-.primary-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.secondary-btn, .copy-btn { border-radius: 999px; background: rgba(255,255,255,0.68); }
+.primary-btn:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+.primary-btn:hover,
+.primary-btn:focus-visible {
+  color: #fff;
+  background: linear-gradient(135deg, #789062, #5c7a61);
+}
+.secondary-btn, .copy-btn {
+  border-radius: 999px;
+  background: rgba(255,255,255,0.88);
+  color: var(--text-head);
+  border: 1px solid rgba(122,122,122,0.12);
+}
+.secondary-btn:hover,
+.copy-btn:hover,
+.secondary-btn:focus-visible,
+.copy-btn:focus-visible {
+  color: var(--text-head);
+  background: rgba(239,244,236,0.96);
+  border-color: rgba(107,143,113,0.24);
+}
+
 .room-shell { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 18px; align-items: start; }
 .room-side, .room-main { display: flex; flex-direction: column; gap: 16px; }
-.side-card, .board-card, .chat-card { padding: 18px; background: rgba(253, 253, 250, 0.8); border: 1px solid rgba(122,122,122,0.08); }
-.room-meta-head, .status-line, .score-head, .board-toolbar, .chat-input-wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.side-card, .board-card, .chat-card {
+  padding: 18px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.8), rgba(252,251,245,0.84)),
+    repeating-linear-gradient(180deg, rgba(107,143,113,0.04), rgba(107,143,113,0.04) 1px, transparent 1px, transparent 34px);
+  border: 1px solid rgba(122,122,122,0.08);
+  box-shadow: 0 18px 36px rgba(66, 74, 54, 0.06);
+}
+.room-meta-head, .status-line, .score-head, .board-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .room-code-label { margin: 0 0 6px; color: var(--muted); font-size: 12px; }
 .room-code { font-size: 24px; letter-spacing: 0.08em; color: var(--text-head); }
 .status-pill { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 999px; font-size: 12px; border: 1px solid rgba(107,143,113,0.18); color: var(--primary-1); }
 .status-pill.playing { background: rgba(107,143,113,0.12); }
 .status-pill.cooldown { background: rgba(202, 161, 92, 0.12); color: #a26d22; }
 .status-extra, .system-tip, .word-line span { color: var(--muted); font-size: 13px; }
-.word-line { display: flex; justify-content: space-between; gap: 12px; margin: 12px 0 0; }
+.meta-grid { display: grid; gap: 10px; margin-top: 14px; }
+.word-line { display: flex; justify-content: space-between; gap: 12px; margin: 0; }
+.prompt-card {
+  margin-top: 14px;
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.66);
+  border: 1px solid rgba(122,122,122,0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.prompt-card.drawer {
+  background: linear-gradient(135deg, rgba(107,143,113,0.12), rgba(255,255,255,0.78));
+  border-color: rgba(107,143,113,0.18);
+}
+.prompt-label { font-size: 12px; letter-spacing: 0.06em; color: var(--primary-1); }
+.prompt-card strong { font-size: 20px; color: var(--text-head); }
+.prompt-card p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.7; }
 .room-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
 .system-tip { margin: 14px 0 0; line-height: 1.7; }
 .player-list { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
 .player-item { display: flex; justify-content: space-between; gap: 12px; padding: 10px 12px; border-radius: 12px; background: rgba(255,255,255,0.58); }
-.player-item p { display: flex; gap: 8px; margin: 4px 0 0; color: var(--muted); font-size: 12px; }
+.player-item p { display: flex; gap: 8px; margin: 4px 0 0; color: var(--muted); font-size: 12px; flex-wrap: wrap; }
 .score { font-weight: 700; color: var(--primary-1); }
+
 .board-wrap { position: relative; margin-top: 14px; border-radius: 18px; overflow: hidden; border: 1px dashed rgba(107,143,113,0.16); }
-.draw-board { width: 100%; height: auto; display: block; background: #fdfcf7; touch-action: none; }
+.draw-board {
+  width: 100%;
+  height: auto;
+  display: block;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.96), rgba(247,244,236,0.96)),
+    repeating-linear-gradient(180deg, rgba(107,143,113,0.06), rgba(107,143,113,0.06) 1px, transparent 1px, transparent 34px);
+  touch-action: none;
+  cursor: crosshair;
+}
 .board-mask { position: absolute; inset: 0; display: flex; align-items: flex-start; justify-content: flex-end; padding: 14px; pointer-events: none; }
 .board-mask p { margin: 0; padding: 6px 12px; border-radius: 999px; background: rgba(255,255,255,0.9); color: var(--muted); font-size: 13px; }
 .toolbar-left { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .toolbar-left label { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; }
+
+.guess-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.86), rgba(241,246,237,0.92)),
+    radial-gradient(circle at top right, rgba(107,143,113,0.14), transparent 35%);
+  border: 1px solid rgba(107,143,113,0.1);
+}
+.guess-kicker {
+  display: inline-flex;
+  margin-bottom: 6px;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--primary-1);
+}
+.guess-panel h3 { margin: 0; font-size: 20px; color: var(--text-head); }
+.guess-panel p { margin: 6px 0 0; color: var(--muted); line-height: 1.7; }
+.guess-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  color: var(--muted);
+  background: rgba(255,255,255,0.76);
+  border: 1px solid rgba(122,122,122,0.1);
+}
+.guess-status.live {
+  color: var(--primary-1);
+  border-color: rgba(107,143,113,0.18);
+}
+.guess-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #c6b48a;
+}
+.guess-status.live .guess-status-dot {
+  background: #6b8f71;
+  box-shadow: 0 0 0 6px rgba(107,143,113,0.12);
+}
+
 .chat-log { max-height: 280px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 4px; }
 .chat-line { padding: 10px 12px; border-radius: 12px; background: rgba(255,255,255,0.55); line-height: 1.7; }
 .chat-line.system { color: var(--primary-1); }
 .chat-line.correct { background: rgba(107,143,113,0.12); color: var(--text-head); }
-.guess-input { margin: 0; height: 42px; border-radius: 12px; background: rgba(255,255,255,0.78); }
-.chat-input-wrap { margin-top: 14px; }
+
+.composer-shell {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  margin-top: 16px;
+  padding: 10px 12px 10px 10px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.92);
+  border: 1px solid rgba(60, 72, 88, 0.12);
+  box-shadow:
+    0 10px 24px rgba(34, 44, 58, 0.06),
+    inset 0 1px 0 rgba(255,255,255,0.9);
+  transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease, opacity .2s ease;
+}
+.composer-shell.active {
+  border-color: rgba(107,143,113,0.26);
+  box-shadow:
+    0 14px 32px rgba(56, 70, 54, 0.08),
+    0 0 0 4px rgba(107,143,113,0.05),
+    inset 0 1px 0 rgba(255,255,255,0.9);
+}
+.composer-shell.disabled { opacity: 0.76; }
+.composer-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  color: #6b7280;
+}
+.composer-icon svg {
+  width: 20px;
+  height: 20px;
+}
+.composer-body { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.composer-label { font-size: 12px; letter-spacing: 0.05em; color: var(--muted); }
+.guess-input {
+  margin: 0;
+  height: 42px;
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-size: 16px;
+  color: var(--text-head);
+  box-shadow: none;
+}
+.guess-input:focus { box-shadow: none; }
+.guess-input::placeholder { color: #9aa1ad; }
+.composer-submit {
+  padding-inline: 20px;
+  min-width: 112px;
+}
 
 @media (max-width: 960px) {
   .room-shell { grid-template-columns: 1fr; }
@@ -559,7 +994,13 @@ onBeforeUnmount(() => {
 @media (max-width: 640px) {
   .page-head { flex-direction: column; align-items: flex-start; }
   .entry-card, .side-card, .board-card, .chat-card { padding: 16px; }
-  .room-meta-head, .board-toolbar, .chat-input-wrap { flex-direction: column; align-items: stretch; }
+  .room-meta-head, .board-toolbar { flex-direction: column; align-items: stretch; }
+  .guess-panel { flex-direction: column; align-items: flex-start; }
   .toolbar-left { width: 100%; }
+  .composer-shell {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+  .composer-icon { display: none; }
 }
 </style>
