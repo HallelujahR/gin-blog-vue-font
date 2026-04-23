@@ -3,7 +3,7 @@
     <nav class="site-nav">
       <div class="site-nav-inner">
         <div class="site-links">
-          <router-link to="/">博客首页</router-link>
+          <router-link to="/" exact-active-class="site-link-current">博客首页</router-link>
           <router-link to="/moments">碎碎念</router-link>
           <router-link to="/tools">工具栏</router-link>
           <router-link to="/about">关于我</router-link>
@@ -146,12 +146,18 @@ watch(() => route.query.q, (value) => {
 }
 
 .site-links a:hover::after,
-.site-links a.router-link-active::after {
+.site-links a.router-link-active::after,
+.site-links a.site-link-current::after {
   transform: scaleX(1);
 }
 
-.site-links a.router-link-active {
+.site-links a.router-link-active,
+.site-links a.site-link-current {
   color: var(--primary-1);
+}
+
+.site-links a.router-link-active:not(.site-link-current)::after {
+  transform: scaleX(0);
 }
 
 .nav-search {

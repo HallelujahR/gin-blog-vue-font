@@ -73,6 +73,7 @@ import { MdPreview } from 'md-editor-v3';
 import { useRoute } from 'vue-router';
 import { apiPosts, apiComments, apiLike, apiMeta } from '../api';
 import Comment from '../components/Comment.vue';
+import { showToast } from '../utils/toast';
 
 const route = useRoute();
 const blog = ref({});
@@ -221,14 +222,17 @@ watch(() => route.params.id, async () => {
 const submitComment = async () => {
   if (!newComment.value.trim()) return;
   const id = Number(route.params.id);
-  await apiComments.create({ content: newComment.value, author_name: authorName.value || '访客', author_email: authorEmail.value || 'guest@example.com', post_id: id });
-  await fetchComments();
+  const response = await apiComments.create({ content: newComment.value, author_name: authorName.value || '访客', author_email: authorEmail.value || 'guest@example.com', post_id: id });
+  showToast(response.data?.notice || '评论已提交，等待审核', 'success', 3200);
   newComment.value = '';
 };
 function handleReply(content, parentId) {
   if (!content.trim()) return;
   const id = Number(route.params.id);
-  apiComments.create({ content, author_name: authorName.value || '访客', author_email: authorEmail.value || 'guest@example.com', post_id: id, parent_id: parentId }).then(fetchComments);
+  apiComments.create({ content, author_name: authorName.value || '访客', author_email: authorEmail.value || 'guest@example.com', post_id: id, parent_id: parentId })
+    .then((response) => {
+      showToast(response.data?.notice || '回复已提交，等待审核', 'success', 3200);
+    });
 }
 async function toggleLike() {
   const id = Number(route.params.id);

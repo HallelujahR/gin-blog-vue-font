@@ -192,10 +192,12 @@ onMounted(() => {
   display: grid;
   gap: 10px;
   margin-top: 14px;
+  max-width: 460px;
 }
 
 .timeline-gallery.count-1 {
   grid-template-columns: 1fr;
+  max-width: 360px;
 }
 
 .timeline-gallery.count-2,
@@ -209,7 +211,8 @@ onMounted(() => {
 
 .timeline-image {
   width: 100%;
-  aspect-ratio: 1 / 1;
+  aspect-ratio: 4 / 5;
+  max-height: 260px;
   object-fit: cover;
   border-radius: 16px;
   border: 1px solid rgba(122, 122, 122, 0.08);
@@ -250,6 +253,11 @@ onMounted(() => {
 
   .timeline-gallery.count-3 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .timeline-gallery,
+  .timeline-gallery.count-1 {
+    max-width: 100%;
   }
 }
 </style>
