@@ -34,7 +34,7 @@
         <h3>工作经历</h3>
         <div class="experience-list">
           <article class="experience-card">
-            <p class="company">百度科技（外派）</p>
+            <p class="company">百度科技</p>
             <p class="role">Golang 开发工程师</p>
           </article>
           <article class="experience-card">
