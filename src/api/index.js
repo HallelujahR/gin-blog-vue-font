@@ -170,3 +170,15 @@ export const apiImageCompress = {
   progressUrl: (jobId) =>
     `/api/tools/image-compress/stream?job_id=${encodeURIComponent(jobId)}`,
 };
+
+export const apiDrawGuess = {
+  createRoom: (payload) => http.post('/tools/draw-guess/rooms', payload),
+  joinRoom: (roomId, payload) => http.post(`/tools/draw-guess/rooms/${encodeURIComponent(roomId)}/join`, payload),
+  getRoom: (roomId, playerId) => http.get(`/tools/draw-guess/rooms/${encodeURIComponent(roomId)}`, { params: { player_id: playerId } }),
+  startGame: (roomId, payload) => http.post(`/tools/draw-guess/rooms/${encodeURIComponent(roomId)}/start`, payload),
+  submitGuess: (roomId, payload) => http.post(`/tools/draw-guess/rooms/${encodeURIComponent(roomId)}/guess`, payload),
+  submitStroke: (roomId, payload) => http.post(`/tools/draw-guess/rooms/${encodeURIComponent(roomId)}/strokes`, payload),
+  clearCanvas: (roomId, payload) => http.post(`/tools/draw-guess/rooms/${encodeURIComponent(roomId)}/clear`, payload),
+  leaveRoom: (roomId, payload) => http.post(`/tools/draw-guess/rooms/${encodeURIComponent(roomId)}/leave`, payload),
+  streamUrl: (roomId, playerId) => `/api/tools/draw-guess/rooms/${encodeURIComponent(roomId)}/stream?player_id=${encodeURIComponent(playerId)}`,
+};

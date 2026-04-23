@@ -6,6 +6,16 @@
     </header>
     <h2 class="section-title">小工具入口</h2>
     <div class="tool-list">
+      <article class="tool-card" @click="go('ToolsDrawGuess')">
+        <div class="tool-logo sketch">
+          <span class="tool-logo-text">DG</span>
+        </div>
+        <div class="tool-info">
+          <h2>你画我猜</h2>
+          <p>支持最多 5 人联机开房，手动填写昵称后即可进入房间，轮流作画、猜词、累计积分。</p>
+        </div>
+        <button class="enter-btn" type="button">进入</button>
+      </article>
       <article class="tool-card" @click="go('ToolsImageCompress')">
         <div class="tool-logo gradient">
           <span class="tool-logo-text">IMG</span>
@@ -50,10 +60,22 @@ const go = (name) => {
   justify-content: center;
   background: radial-gradient(circle at 0% 0%, #38bdf8, transparent 55%), radial-gradient(circle at 100% 100%, #a855f7, transparent 55%), #0f172a;
 }
+.tool-logo.sketch {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    linear-gradient(135deg, rgba(242, 237, 228, 0.96), rgba(255, 255, 255, 0.88)),
+    repeating-linear-gradient(135deg, rgba(107, 143, 113, 0.08), rgba(107, 143, 113, 0.08) 8px, transparent 8px, transparent 18px);
+  border: 1px solid rgba(107, 143, 113, 0.18);
+}
 .tool-logo-text {
   font-size: 20px;
   font-weight: 700;
   color: #e5f0ff;
+}
+.tool-logo.sketch .tool-logo-text {
+  color: #516b57;
 }
 .tool-info h2 { margin: 0; font-size: 18px; font-weight: 600; color: var(--text); }
 .tool-info p { margin: 6px 0 0; font-size: 14px; color: var(--muted); line-height: 1.6; }
@@ -61,4 +83,3 @@ const go = (name) => {
 .tool-card:hover .enter-btn { transform: translateX(2px); box-shadow: 0 10px 20px rgba(163, 177, 138, 0.35); }
 .section-title { margin: 12px 0 -4px; font-size: 18px; font-weight: 600; color: var(--text); }
 </style>
-

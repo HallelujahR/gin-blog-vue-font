@@ -12,6 +12,7 @@ const frontRoutes = [
       { path: 'tools', name: 'Tools', component: () => import('../views/Tools.vue') },
       { path: 'tools/cat', name: 'ToolsCat', component: () => import('../views/tools/CatViewer.vue') },
       { path: 'tools/image-compress', name: 'ToolsImageCompress', component: () => import('../views/tools/ImageCompressor.vue') },
+      { path: 'tools/draw-guess', name: 'ToolsDrawGuess', component: () => import('../views/tools/DrawGuess.vue') },
       { path: 'about', name: 'About', component: () => import('../views/About.vue') },
       { path: 'guestbook', name: 'Guestbook', component: () => import('../views/Guestbook.vue') },
       { path: 'blog/:id', name: 'BlogDetail', component: () => import('../views/BlogDetail.vue'), props: true },
